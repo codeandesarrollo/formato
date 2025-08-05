@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Generador de Presupuesto - BIOPEST</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  /* Estilos base */
+  body {
+    font-family: Arial, sans-serif;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    background: #f5f5f5;
+    font-size: 13px;
+    line-height: 1.5;
+    color: #333;
+  }
+  
+  .container {
+    background: #fff;
+    padding: 25px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0,0,0,.1);
+  }
+  
+  h1 {
+    color: #2E7D32;
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 20px;
+  }
+  
+  h2.section-title {
+    color: #2E7D32;
+    border-bottom: 2px solid #2E7D32;
+    padding-bottom: 4px;
+    margin-top: 20px;
+    font-size: 15px;
+  }
+  
+  /* Estilos mejorados para formulario */
+  .form-group {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 6px;
+    margin-bottom: 15px;
+  }
+  
+  label {
+    display: block;
+    margin-bottom: 4px;
+    font-weight: bold;
+    color: #333;
+    font-size: 13px;
+  }
+  
+  input[type="text"],
+  input[type="date"],
+  input[type="email"],
+  input[type="tel"],
+  input[type="number"],
+  select,
+  textarea {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-sizing: border-box;
+    font-size: 13px;
+    transition: border-color 0.2s;
+  }
+  
+  input[type="text"]:focus,
+  input[type="date"]:focus,
+  textarea:focus,
+  select:focus {
+    border-color: #2E7D32;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(46, 125, 50, 0.1);
+  }
+  
+  textarea {
+    min-height: 80px;
+    resize: vertical;
+    line-height: 1.4;
+  }
+  
+  /* Estilos para checkboxes */
+  .plagas-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    margin: 12px 0;
+    font-size: 13px;
+  }
+  
+  .checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  
+  .checkbox-label input[type="checkbox"] {
+    width: auto;
+    margin: 0;
+    flex-shrink: 0;
+  }
+  
+  /* Estilos para botones */
+  button {
+    background: #2E7D32;
+    color: #fff;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    margin-top: 15px;
+    width: 100%;
+    transition: background-color 0.2s;
+  }
+  
+  button:hover {
+    background: #1B5E20;
+  }
+  
+  .btn-secondary {
+    background: #EEE;
+    color: #333;
+    width: auto;
+    padding: 8px 14px;
+    font-size: 13px;
+  }
+  
+  .btn-secondary:hover {
+    background: #e0e0e0;
+  }
+  
+  /* Sección de inversión */
+  .investment-box {
+    border: 2px solid #2E7D32;
+    padding: 12px;
+    border-radius: 5px;
+    background: #f0f8f0;
+    margin: 12px 0;
+  }
+  
+  .investment-title {
+    color: #2E7D32;
+    font-weight: bold;
+    font-size: 15px;
+    margin-bottom: 8px;
+    text-align: center;
+  }
+  
+  .investment-amount {
+    font-size: 18px;
+    font-weight: bold;
+    text-align: center;
+    color: #1B5E20;
+    margin: 8px 0;
+  }
+  
+  .investment-details {
+    font-size: 12px;
+    text-align: center;
+    color: #333;
+  }
+  
+  /* Selector de logos */
+  .logo-picker {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 12px;
+  }
+  
+  .logo-card {
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 8px;
+    cursor: pointer;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    transition: border-color .2s, box-shadow .2s;
+  }
+  
+  .logo-card:hover {
+    border-color: #a5d6a7;
+    box-shadow: 0 0 0 3px rgba(76,175,80,.15);
+  }
+  
+  .logo-card.selected {
+    border-color: #2E7D32;
+    box-shadow: 0 0 0 3px rgba(46,125,50,.25);
+  }
+  
+  .logo-card img {
+    max-width: 100%;
+    max-height: 60px;
+    object-fit: contain;
+    background: #fff;
+  }
+  
+  .caption {
+    font-size: 12px;
+    color: #333;
+    text-align: center;
+    width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .logo-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 8px;
+    flex-wrap: wrap;
+  }
+  
+  .logo-preview {
+    margin-top: 8px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+  
+  .logo-preview img {
+    max-height: 50px;
+    border: 1px solid #eee;
+    border-radius: 4px;
+    padding: 4px;
+    background: #fff;
+  }
+  
+  input[type="file"] {
+    display: none;
+  }
+  
+  /* Estilos específicos para inputs especiales */
+  .investment-box input {
+    border: none;
+    background: transparent;
+    padding: 0;
+    margin: 0;
+    width: 100%;
+    text-align: center;
+  }
+  
+  /* Ajustes para fecha */
+  input[type="date"] {
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpath d='M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z'%3e%3c/path%3e%3cpolyline points='17 21 17 13 7 13 7 21'%3e%3c/polyline%3e%3cpolyline points='7 3 7 8 15 8'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    background-size: 16px;
+    padding-right: 30px;
+  }
+  
+  /* Notas pequeñas */
+  small {
+    font-size: 11px;
+    color: #666;
+    display: block;
+    margin-top: 4px;
+    line-height: 1.4;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Generador de Presupuesto</h1>
+
+  <!-- Logos predefinidos -->
+  <div class="form-group">
+    <label>Elegir logo para el PDF (clic en una tarjeta):</label>
+    <div id="logo-picker" class="logo-picker">
+      <!-- Ajusta rutas a tus archivos reales -->
+      <div class="logo-card selected" data-src="imagenes/logo1.png" data-caption="Logo 1 (PNG)">
+        <img src="imagenes/logo1.png" alt="Logo 1">
+        <div class="caption">Logo 1 (PNG)</div>
+      </div>
+      <div class="logo-card" data-src="imagenes/logo2.png" data-caption="Logo 2 (PNG)">
+        <img src="imagenes/logo2.png" alt="Logo 2">
+        <div class="caption">Logo 2 (PNG)</div>
+      </div>
+    </div>
+
+    <div class="logo-actions">
+      <button type="button" id="test-logo" class="btn-secondary">Probar carga (URL → Base64)</button>
+     
+      <input id="file-logo" type="file" accept="image/*">
+      <button type="button" id="usar-subido" class="btn-secondary">Usar el logo subido</button>
+    </div>
+
+    <div class="logo-preview">
+      <span>Vista previa:</span>
+      <img id="logo-preview-img" src="imagenes/logo1.png" alt="Vista previa del logo">
+    </div>
+    <small style="color:#555">
+      Opción sin CORS: usa "Subir logo desde tu PC".<br>
+      Para convertir URL → Base64 con los logos del proyecto, abre el sitio desde un servidor (Live Server, hosting) y no con <code>file:///</code>.
+    </small>
+  </div>
+
+  <!-- Campos -->
+  <div class="form-group">
+    <label for="nombre-empresa">Nombre de la Empresa:</label>
+    <input id="nombre-empresa" value="BIOPEST - Control Integral de Plagas">
+  </div>
+  <div class="form-group">
+    <label for="eslogan-empresa">Eslogan o Descripción:</label>
+    <input id="eslogan-empresa" value="Servicios Profesionales de Fumigación y Control de Plagas">
+  </div>
+  <div class="form-group">
+    <label for="lugar">Ciudad y Estado:</label>
+    <input id="lugar" value="Puerto Vallarta, Jal.">
+  </div>
+  <div class="form-group">
+    <label for="destinatario">Nombre del Destinatario:</label>
+    <input id="destinatario" value="Ing. Gilberto Rodríguez">
+  </div>
+  <div class="form-group">
+    <label for="empresa-destino">Empresa/Institución:</label>
+    <input id="empresa-destino" value="Hotel Hyatt Ziva">
+  </div>
+  <div class="form-group">
+    <label for="fecha">Fecha:</label>
+    <input type="date" id="fecha">
+  </div>
+  <div class="form-group">
+    <label for="saludo-adicional">Saludo Adicional:</label>
+    <textarea id="saludo-adicional">A nombre de CONTROL DE PLAGAS VERACRUZ, les damos la más cordial bienvenida a nuestra empresa, ya que nuestro propósito es brindarles un servicio de calidad y mejorar la imagen de su empresa o negocio.
+
+CONTROL DE PLAGAS VERACRUZ les ofrece un servicio profesional de fumigación controlando de forma integral las plagas con productos de calidad, equipo y personal altamente calificado, anticipándonos a las necesidades del cliente, garantizando eficacia, seguridad y conservación del medio ambiente.</textarea>
+  </div>
+
+  <h2 class="section-title">Detalles del Servicio</h2>
+
+  <div class="form-group">
+    <label>Plagas a Controlar:</label>
+    <div class="plagas-grid">
+      <label class="checkbox-label"><input type="checkbox" class="plaga" value="Cucaracha alemana" checked> Cucaracha alemana</label>
+      <label class="checkbox-label"><input type="checkbox" class="plaga" value="Cucaracha americana" checked> Cucaracha americana</label>
+      <label class="checkbox-label"><input type="checkbox" class="plaga" value="Mosquitos" checked> Mosquitos</label>
+      <label class="checkbox-label"><input type="checkbox" class="plaga" value="Arañas" checked> Arañas</label>
+      <label class="checkbox-label"><input type="checkbox" class="plaga" value="Chinches de cama" checked> Chinches de cama</label>
+      <label class="checkbox-label"><input type="checkbox" class="plaga" value="Alacranes" checked> Alacranes</label>
+      <label class="checkbox-label"><input type="checkbox" class="plaga" value="Roedores" checked> Roedores</label>
+      <label class="checkbox-label"><input type="checkbox" class="plaga" value="Hormigas" checked> Hormigas</label>
+      <label class="checkbox-label"><input type="checkbox" class="plaga" value="Murciélagos"> Murciélagos</label>
+      <label class="checkbox-label"><input type="checkbox" class="plaga" value="Aves"> Aves</label>
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label for="servicios">Servicios Incluidos:</label>
+    <textarea id="servicios">• Fumigación general
+• Control de insectos voladores
+• Control de cucarachas en áreas críticas
+• Control de roedores (cerco sanitario)
+• Trampas para fauna nociva
+• Reporte mensual con evidencias</textarea>
+  </div>
+
+  <div class="form-group">
+    <label for="areas">Áreas a Intervenir:</label>
+    <textarea id="areas">• Cocinas y áreas de preparación de alimentos
+• Bodegas y almacenes
+• Áreas administrativas
+• Jardines y perímetros
+• Habitaciones (en caso de hoteles)
+• Sistemas de drenaje y alcantarillado</textarea>
+  </div>
+
+  <div class="form-group">
+    <label for="documentacion">Documentación Entregable Una vez Contratado El Servicio:</label>
+    <textarea id="documentacion">• Licencia sanitaria
+• Fichas técnicas de productos
+• Reporte mensual de servicios
+• Certificado de servicio
+• Calendario de rotación de plaguicidas</textarea>
+  </div>
+
+  <div class="form-group">
+    <div class="investment-box">
+      <input id="periodo-inversion" class="investment-title" value="Inversión Mensual" style="text-align:center;border:none;background:transparent;">
+      <input id="costo" class="investment-amount" value="$32,000.00 MXN + IVA" style="text-align:center;border:none;background:transparent;">
+      <input id="detalles-costo" class="investment-details" value="Pago mensual por servicios integrales de control de plagas" style="text-align:center;border:none;background:transparent;">
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label for="observaciones">Comentarios</label>
+    <textarea id="observaciones">Sin más por el momento y esperando que nos brinden la oportunidad servirles quedamos a sus  
+apreciables órdenes para cualquier duda o aclaración al respecto.</textarea>
+  </div>
+  
+  <h2 class="section-title">Firma</h2>
+  <div class="form-group">
+    <label for="nombre-firma">Nombre:</label>
+    <input type="text" id="nombre-firma" value="Uziel Pérez López">
+  </div>
+  <div class="form-group">
+    <label for="cargo-firma">Cargo:</label>
+    <input type="text" id="cargo-firma" value="Gerente General">
+  </div>
+
+  <button id="generar-pdf">Generar Presupuesto PDF</button>
+</div>
+
+<script>
+  const { jsPDF } = window.jspdf;
+
+  // --- Estado del logo seleccionado ---
+  let selectedLogoDataURL = null;   // Base64 listo para jsPDF (prioridad)
+  let selectedLogoURL = 'imagenes/logo1.png'; // URL por si queremos convertirla
+
+  // --- Helpers ---
+  function getImageTypeFromExt(src) {
+    const ext = (src || '').split('?')[0].split('.').pop()?.toLowerCase();
+    if (ext === 'jpg' || ext === 'jpeg') return 'JPEG';
+    if (ext === 'png') return 'PNG';
+    if (ext === 'webp') return 'WEBP';
+    return 'PNG';
+  }
+
+  // Convierte una URL a Base64 (requiere mismo origen / servidor)
+  async function urlToDataURL(url) {
+    const resp = await fetch(url);                  // falla en file://
+    const blob = await resp.blob();
+    return await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result); // data:image/...;base64,XXXX
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  }
+
+  // Lee un archivo local a Base64 (funciona siempre, sin CORS)
+  function fileToDataURL(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  // --- UI: selección por tarjetas ---
+  const logoPicker = document.getElementById('logo-picker');
+  const previewImg = document.getElementById('logo-preview-img');
+
+  logoPicker.addEventListener('click', (e) => {
+    const card = e.target.closest('.logo-card');
+    if (!card) return;
+    logoPicker.querySelectorAll('.logo-card').forEach(c => c.classList.remove('selected'));
+    card.classList.add('selected');
+    selectedLogoURL = card.getAttribute('data-src');
+    selectedLogoDataURL = null; // usar URL hasta convertir
+    previewImg.src = selectedLogoURL;
+  });
+
+  // Botón: probar convertir URL → Base64
+  document.getElementById('test-logo').addEventListener('click', async () => {
+    try {
+      const dataURL = await urlToDataURL(selectedLogoURL);
+      selectedLogoDataURL = dataURL;
+      alert('Logo convertido a Base64 correctamente.');
+    } catch (e) {
+      alert('No se pudo convertir la URL a Base64.\n' +
+            'Si abriste el archivo con "file://", usa Live Server/hosting o sube el logo desde tu PC.');
+    }
+  });
+
+  // Subir archivo local
+  const fileInput = document.getElementById('file-logo');
+  document.getElementById('usar-subido').addEventListener('click', async () => {
+    const file = fileInput.files?.[0];
+    if (!file) return alert('Primero selecciona un archivo con "Subir logo desde tu PC".');
+    try {
+      selectedLogoDataURL = await fileToDataURL(file); // siempre funciona
+      previewImg.src = selectedLogoDataURL;
+      alert('Logo local listo en Base64.');
+    } catch (e) {
+      alert('No se pudo leer el archivo seleccionado.');
+    }
+  });
+
+  // Generar PDF
+  document.getElementById('generar-pdf').addEventListener('click', async () => {
+    const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+    const left = 15, right = 195;
+    let y = 15;
+
+    // Asegurar que tenemos Base64: si no hay (y hay URL), intentamos convertir
+    if (!selectedLogoDataURL && selectedLogoURL) {
+      try {
+        selectedLogoDataURL = await urlToDataURL(selectedLogoURL);
+      } catch (_) {
+        // si falla, seguimos sin logo
+        console.warn('No se pudo convertir URL a Base64 (probable CORS/file://).');
+      }
+    }
+
+    // Insertar logo si tenemos Base64
+    if (selectedLogoDataURL) {
+      const type = getImageTypeFromExt(selectedLogoDataURL) || 'PNG';
+      // Tamaño con proporción aproximada (si la imagen es muy larga/alta jsPDF la ajusta)
+      const maxW = 35, maxH = 18;
+      // No tenemos dimensiones reales aquí; dibujamos tamaño fijo
+      doc.addImage(selectedLogoDataURL, type, left, y - 5, maxW, maxH);
+    }
+
+    // Encabezado
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(14);
+    doc.setTextColor(46, 125, 50);
+    doc.text(document.getElementById('nombre-empresa').value, 105, y, { align: 'center' });
+    doc.setFontSize(9);
+    doc.setTextColor(100, 100, 100);
+    doc.text(document.getElementById('eslogan-empresa').value, 105, y + 5, { align: 'center' });
+
+    // Línea
+    doc.setDrawColor(46, 125, 50);
+    doc.setLineWidth(0.5);
+    doc.line(left, 25, right, 25);
+
+    // Fecha
+    const fechaInput = document.getElementById('fecha').value;
+    const fecha = fechaInput ? new Date(fechaInput) : new Date();
+    const fechaFormateada = fecha.toLocaleDateString('es-MX', { day: '2-digit', month: 'long', year: 'numeric' });
+
+    doc.setFontSize(10);
+    doc.setTextColor(0, 0, 0);
+    doc.text(document.getElementById('lugar').value + ', ' + fechaFormateada, left, 40);
+
+    doc.setFont('helvetica', 'bold');
+    doc.text(document.getElementById('destinatario').value, left, 45);
+    doc.setFont('helvetica', 'normal');
+    doc.text(document.getElementById('empresa-destino').value, left, 50);
+
+    // Saludo
+    const saludoAdicional = document.getElementById('saludo-adicional').value;
+    const lines = doc.splitTextToSize(saludoAdicional, 180);
+    doc.text(lines, left, 60);
+
+    y = 60 + (lines.length * 4) + 5;
+
+    // Separador
+    doc.setDrawColor(200, 200, 200);
+    doc.line(left, y, right, y);
+    y += 8;
+
+    // Plagas (versión corregida)
+    doc.setFontSize(12);
+    doc.setTextColor(46, 125, 50);
+    doc.text('Plagas a Controlar:', left, y);
+    y += 8;
+
+    doc.setFontSize(9);
+    doc.setTextColor(0, 0, 0);
+
+    const plagas = Array.from(document.querySelectorAll('.plaga:checked')).map(cb => cb.value);
+    const mitad = Math.ceil(plagas.length / 2);
+    const c1 = plagas.slice(0, mitad), c2 = plagas.slice(mitad);
+    const maxItems = Math.max(c1.length, c2.length);
+    
+    let currentY = y; // Variable separada para controlar la posición Y
+    
+    for (let i = 0; i < maxItems; i++) {
+      if (c1[i]) {
+        doc.text('• ' + c1[i], left + 5, currentY);
+      }
+      if (c2[i]) {
+        doc.text('• ' + c2[i], 110, currentY);
+      }
+      currentY += 4; // Incremento constante para ambas columnas
+    }
+    
+    y = currentY + 4; // Actualizamos la posición Y principal con espacio adicional
+
+    // Servicios
+    doc.setFontSize(12);
+    doc.setTextColor(46, 125, 50);
+    doc.text('Servicios Incluidos:', left, y + 5);
+    y += 8;
+    
+    doc.setFontSize(9);
+    doc.setTextColor(0, 0, 0);
+    document.getElementById('servicios').value.split('\n').forEach(s => {
+      if (s.trim()) {
+        doc.text(s.trim(), left + 5, y);
+        y += 4;
+      }
+    });
+
+    // Áreas
+    doc.setFontSize(12);
+    doc.setTextColor(46, 125, 50);
+    doc.text('Áreas a Intervenir:', left, y + 5);
+    y += 8;
+    
+    doc.setFontSize(9);
+    doc.setTextColor(0, 0, 0);
+    document.getElementById('areas').value.split('\n').forEach(a => {
+      if (a.trim()) {
+        doc.text(a.trim(), left + 5, y);
+        y += 4;
+      }
+    });
+
+    // Documentación
+    doc.setFontSize(12);
+    doc.setTextColor(46, 125, 50);
+    doc.text('Documentación Entregable Una vez Contratado El Servicio:', left, y + 5);
+    y += 8;
+    
+    doc.setFontSize(9);
+    doc.setTextColor(0, 0, 0);
+    document.getElementById('documentacion').value.split('\n').forEach(d => {
+      if (d.trim()) {
+        doc.text(' ' + d.trim(), left + 5, y);
+        y += 4;
+      }
+    });
+
+    // Inversión
+    doc.setFontSize(12);
+    doc.setTextColor(46, 125, 50);
+    doc.text(document.getElementById('periodo-inversion').value, 105, y + 8, { align: 'center' });
+
+    doc.setDrawColor(46, 125, 50);
+    doc.setLineWidth(0.5);
+    doc.roundedRect(50, y + 12, 110, 15, 3, 3, 'S');
+
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(27, 94, 32);
+    doc.text(document.getElementById('costo').value, 105, y + 22, { align: 'center' });
+
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(100, 100, 100);
+    doc.text(document.getElementById('detalles-costo').value, 105, y + 26, { align: 'center' });
+
+    y += 35;
+
+    // Observaciones
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    const obs = doc.splitTextToSize(document.getElementById('observaciones').value, 180);
+    doc.text(obs, left + 5, y);
+
+    // Firma
+    y += 20; // espacio antes de la firma
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    doc.text(document.getElementById('nombre-firma').value, 105, y, { align: 'center' });
+
+    y += 5;
+    doc.setFont('helvetica', 'normal');
+    doc.text(document.getElementById('cargo-firma').value, 105, y, { align: 'center' });
+
+    // Pie
+    doc.setFontSize(7);
+    doc.setTextColor(100, 100, 100);
+    doc.text('Av. Las torres 534. Col. Ojo de agua Puerto Vallarta Jal. C.P.48344  |  Biocontrol.vallarta@outlook.es  |  Teléfono (322)1579386, (322)2240731', 105, 285, { align: 'center' });
+
+    // Guardar
+    const nombreArchivo = `Presupuesto_BIOPEST_${document.getElementById('empresa-destino').value.replace(/ /g,'_').substring(0,20)}.pdf`;
+    doc.save(nombreArchivo);
+  });
+
+  // Fecha por defecto
+  document.getElementById('fecha').valueAsDate = new Date();
+</script>
+</body>
+</html>
