@@ -463,8 +463,8 @@ apreciables órdenes para cualquier duda o aclaración al respecto.</textarea>
   const { jsPDF } = window.jspdf;
 
   // --- Estado del logo seleccionado ---
-  let selectedLogoDataURL = null;   // Base64 listo para jsPDF (prioridad)
-  let selectedLogoURL = 'imagenes/logo1.png'; // URL por si queremos convertirla
+  let selectedLogoDataURL = null;
+  let selectedLogoURL = 'imagenes/logo1.png';
 
   // --- Helpers ---
   function getImageTypeFromExt(src) {
@@ -475,19 +475,17 @@ apreciables órdenes para cualquier duda o aclaración al respecto.</textarea>
     return 'PNG';
   }
 
-  // Convierte una URL a Base64 (requiere mismo origen / servidor)
   async function urlToDataURL(url) {
-    const resp = await fetch(url);                  // falla en file://
+    const resp = await fetch(url);
     const blob = await resp.blob();
     return await new Promise((resolve, reject) => {
       const reader = new FileReader();
-      reader.onload = () => resolve(reader.result); // data:image/...;base64,XXXX
+      reader.onload = () => resolve(reader.result);
       reader.onerror = reject;
       reader.readAsDataURL(blob);
     });
   }
 
-  // Lee un archivo local a Base64 (funciona siempre, sin CORS)
   function fileToDataURL(file) {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -507,29 +505,26 @@ apreciables órdenes para cualquier duda o aclaración al respecto.</textarea>
     logoPicker.querySelectorAll('.logo-card').forEach(c => c.classList.remove('selected'));
     card.classList.add('selected');
     selectedLogoURL = card.getAttribute('data-src');
-    selectedLogoDataURL = null; // usar URL hasta convertir
+    selectedLogoDataURL = null;
     previewImg.src = selectedLogoURL;
   });
 
-  // Botón: probar convertir URL → Base64
   document.getElementById('test-logo').addEventListener('click', async () => {
     try {
       const dataURL = await urlToDataURL(selectedLogoURL);
       selectedLogoDataURL = dataURL;
       alert('Logo convertido a Base64 correctamente.');
     } catch (e) {
-      alert('No se pudo convertir la URL a Base64.\n' +
-            'Si abriste el archivo con "file://", usa Live Server/hosting o sube el logo desde tu PC.');
+      alert('No se pudo convertir la URL a Base64.\nUsa Live Server/hosting o sube el logo desde tu PC.');
     }
   });
 
-  // Subir archivo local
   const fileInput = document.getElementById('file-logo');
   document.getElementById('usar-subido').addEventListener('click', async () => {
     const file = fileInput.files?.[0];
     if (!file) return alert('Primero selecciona un archivo con "Subir logo desde tu PC".');
     try {
-      selectedLogoDataURL = await fileToDataURL(file); // siempre funciona
+      selectedLogoDataURL = await fileToDataURL(file);
       previewImg.src = selectedLogoDataURL;
       alert('Logo local listo en Base64.');
     } catch (e) {
@@ -546,257 +541,266 @@ apreciables órdenes para cualquier duda o aclaración al respecto.</textarea>
     });
   });
 
-  // Función para dibujar marco decorativo
+  // Función para dibujar marco decorativo (manteniendo color azul marino original)
   function dibujarMarco(doc) {
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
-    
-    // Marco principal - Azul marino (#001F3F)
-    doc.setDrawColor(0, 31, 63);
+    doc.setDrawColor(0, 31, 63); // Azul marino original (#001F3F)
     doc.setLineWidth(1.8);
     doc.rect(7, 7, pageWidth - 14, pageHeight - 14);
-    
-    // Esquinas decorativas estilo náutico
-    const cornerLength = 15;
-    
-    // Función para dibujar esquinas decorativas
-    function drawCorner(x, y, mirrorX = false, mirrorY = false) {
-      const size = 12;
-      doc.setDrawColor(0, 31, 63);
-      doc.setLineWidth(1.2);
-    }
   }
 
-  // Función para verificar si necesitamos nueva página
+  // Función para verificar altura de página
   function checkPageHeight(doc, y, marginBottom = 20) {
     const pageHeight = doc.internal.pageSize.getHeight();
     if (y > pageHeight - marginBottom) {
       doc.addPage();
-      dibujarMarco(doc);
-      return marginBottom; // Retorna nueva posición Y
+      const conMarco = document.querySelector('input[name="marco"]:checked').value === 'con-marco';
+      if (conMarco) dibujarMarco(doc);
+      return 20;
     }
     return y;
   }
 
-  // Generar PDF con paginación automática
+  // Función para manejar texto con viñetas manteniendo formato original
+  function handleTextWithBullets(doc, text, x, y, maxWidth) {
+    const lines = text.split('\n');
+    let currentY = y;
+    
+    for (const line of lines) {
+      if (!line.trim()) continue;
+      
+      const isBullet = line.trim().startsWith('•');
+      const bulletIndent = isBullet ? 5 : 0;
+      const splitLines = doc.splitTextToSize(line, maxWidth - bulletIndent);
+      
+      for (const splitLine of splitLines) {
+        currentY = checkPageHeight(doc, currentY);
+        doc.text(
+          splitLine, 
+          x + (isBullet && splitLine === splitLines[0] ? 5 : 0), 
+          currentY
+        );
+        currentY += 5;
+      }
+    }
+    
+    return currentY;
+  }
+
+  // Generar PDF manteniendo colores originales
   document.getElementById('generar-pdf').addEventListener('click', async () => {
     const doc = new jsPDF({ unit: 'mm', format: 'a4' });
-    const left = 15, right = 195;
-    let y = 15;
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
     
-    // Verificar si se debe agregar marco
+    // Márgenes ajustados
+    const left = 20;
+    const right = pageWidth - 20;
+    const maxWidth = right - left;
+    let y = 25;
     const conMarco = document.querySelector('input[name="marco"]:checked').value === 'con-marco';
     
-    // Dibujar marco en la primera página si está seleccionado
-    if (conMarco) {
-      dibujarMarco(doc);
-    }
+    // Marco (si está seleccionado)
+    if (conMarco) dibujarMarco(doc);
 
-    // Asegurar que tenemos Base64: si no hay (y hay URL), intentamos convertir
+    // Logo
     if (!selectedLogoDataURL && selectedLogoURL) {
       try {
         selectedLogoDataURL = await urlToDataURL(selectedLogoURL);
       } catch (_) {
-        // si falla, seguimos sin logo
-        console.warn('No se pudo convertir URL a Base64 (probable CORS/file://).');
+        console.warn('No se pudo convertir URL a Base64');
       }
     }
-
-    // Insertar logo si tenemos Base64
+    
     if (selectedLogoDataURL) {
       const type = getImageTypeFromExt(selectedLogoDataURL) || 'PNG';
-      // Tamaño con proporción aproximada (si la imagen es muy larga/alta jsPDF la ajusta)
-      const maxW = 35, maxH = 18;
-      // No tenemos dimensiones reales aquí; dibujamos tamaño fijo
-      doc.addImage(selectedLogoDataURL, type, left, y - 5, maxW, maxH);
+      doc.addImage(selectedLogoDataURL, type, left, y - 5, 35, 18);
     }
 
-    // Encabezado
+    // Encabezado (manteniendo colores originales)
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(14);
-    doc.setTextColor(46, 125, 50);
-    doc.text(document.getElementById('nombre-empresa').value, 105, y, { align: 'center' });
+    doc.setTextColor(46, 125, 50); // Verde original (#2E7D32)
+    doc.text(document.getElementById('nombre-empresa').value, pageWidth / 2, y, { align: 'center' });
     doc.setFontSize(9);
-    doc.setTextColor(100, 100, 100);
-    doc.text(document.getElementById('eslogan-empresa').value, 105, y + 5, { align: 'center' });
+    doc.setTextColor(100, 100, 100); // Gris original
+    doc.text(document.getElementById('eslogan-empresa').value, pageWidth / 2, y + 5, { align: 'center' });
 
-    // Línea
-    doc.setDrawColor(46, 125, 50);
+    // Línea separadora (verde original)
+    doc.setDrawColor(46, 125, 50); // #2E7D32
     doc.setLineWidth(0.5);
-    doc.line(left, 25, right, 25);
-
-    // Fecha
-    const fechaInput = document.getElementById('fecha').value;
-    const fecha = fechaInput ? 
-  new Date(new Date(fechaInput).getTime() + new Date(fechaInput).getTimezoneOffset() * 60000) : 
-  new Date(new Date().getTime() + new Date().getTimezoneOffset() * 60000);
-    const fechaFormateada = fecha.toLocaleDateString('es-MX', { day: '2-digit', month: 'long', year: 'numeric' });
-
-    doc.setFontSize(10);
-    doc.setTextColor(0, 0, 0);
-    doc.text(document.getElementById('lugar').value + ', ' + fechaFormateada, left, 40);
-    y = 40;
-
-    doc.setFont('helvetica', 'bold');
-    doc.text(document.getElementById('destinatario').value, left, y + 5);
-    doc.setFont('helvetica', 'normal');
-    doc.text(document.getElementById('empresa-destino').value, left, y + 10);
+    doc.line(left, y + 10, right, y + 10);
     y += 15;
 
-    // Saludo
-    const saludoAdicional = document.getElementById('saludo-adicional').value;
-    const saludoLines = doc.splitTextToSize(saludoAdicional, 180);
-    
-    // Verificar espacio para el saludo
-    y = checkPageHeight(doc, y);
-    
-    doc.text(saludoLines, left, y);
-    y += (saludoLines.length * 4) + 5;
+    // Fecha y lugar (color negro original)
+    const fechaInput = document.getElementById('fecha').value;
+    const fecha = fechaInput ? 
+      new Date(new Date(fechaInput).getTime() + new Date(fechaInput).getTimezoneOffset() * 60000) : 
+      new Date(new Date().getTime() + new Date().getTimezoneOffset() * 60000);
+    const fechaFormateada = new Date(fecha).toLocaleDateString('es-MX', { day: '2-digit', month: 'long', year: 'numeric' });
 
-    // Separador
+    doc.setFontSize(10);
+    doc.setTextColor(0, 0, 0); // Negro
+    doc.text(`${document.getElementById('lugar').value}, ${fechaFormateada}`, left, y);
+    y += 10;
+
+    // Destinatario
+    doc.setFont('helvetica', 'bold');
+    doc.text(document.getElementById('destinatario').value, left, y);
+    doc.setFont('helvetica', 'normal');
+    doc.text(document.getElementById('empresa-destino').value, left, y + 5);
+    y += 15;
+
+    // Saludo adicional
+    doc.setFontSize(10);
+    y = handleTextWithBullets(
+      doc, 
+      document.getElementById('saludo-adicional').value, 
+      left, 
+      y, 
+      maxWidth
+    );
+    y += 10;
+
+    // Separador (gris claro original)
     y = checkPageHeight(doc, y);
-    doc.setDrawColor(200, 200, 200);
+    doc.setDrawColor(200, 200, 200); // Gris claro
     doc.line(left, y, right, y);
     y += 8;
 
-    // Plagas
+    // Plagas a controlar (verde original)
     y = checkPageHeight(doc, y);
     doc.setFontSize(12);
-    doc.setTextColor(46, 125, 50);
+    doc.setTextColor(46, 125, 50); // #2E7D32
     doc.text('Plagas a Controlar:', left, y);
     y += 8;
 
     doc.setFontSize(9);
-    doc.setTextColor(0, 0, 0);
-
+    doc.setTextColor(0, 0, 0); // Negro
     const plagas = Array.from(document.querySelectorAll('.plaga:checked')).map(cb => cb.value);
     const mitad = Math.ceil(plagas.length / 2);
     const c1 = plagas.slice(0, mitad), c2 = plagas.slice(mitad);
-    const maxItems = Math.max(c1.length, c2.length);
     
-    for (let i = 0; i < maxItems; i++) {
+    for (let i = 0; i < mitad; i++) {
       y = checkPageHeight(doc, y);
-      if (c1[i]) {
-        doc.text('• ' + c1[i], left + 5, y);
-      }
-      if (c2[i]) {
-        doc.text('• ' + c2[i], 110, y);
-      }
-      y += 4;
+      if (c1[i]) doc.text('• ' + c1[i], left + 5, y);
+      if (c2[i]) doc.text('• ' + c2[i], left + (maxWidth / 2), y);
+      y += 5;
     }
-    
-    y += 4;
+    y += 5;
 
-    // Servicios
+    // Servicios incluidos (verde original para título)
     y = checkPageHeight(doc, y);
     doc.setFontSize(12);
-    doc.setTextColor(46, 125, 50);
+    doc.setTextColor(46, 125, 50); // #2E7D32
     doc.text('Servicios Incluidos:', left, y);
     y += 8;
     
     doc.setFontSize(9);
-    doc.setTextColor(0, 0, 0);
-    const serviciosLines = document.getElementById('servicios').value.split('\n');
-    for (const line of serviciosLines) {
-      if (line.trim()) {
-        y = checkPageHeight(doc, y);
-        doc.text(line.trim(), left + 5, y);
-        y += 4;
-      }
-    }
+    doc.setTextColor(0, 0, 0); // Negro
+    y = handleTextWithBullets(
+      doc,
+      document.getElementById('servicios').value,
+      left,
+      y,
+      maxWidth
+    );
+    y += 5;
 
-    // Áreas
+    // Áreas a intervenir (verde original para título)
     y = checkPageHeight(doc, y);
     doc.setFontSize(12);
-    doc.setTextColor(46, 125, 50);
+    doc.setTextColor(46, 125, 50); // #2E7D32
     doc.text('Áreas a Intervenir:', left, y);
     y += 8;
     
     doc.setFontSize(9);
-    doc.setTextColor(0, 0, 0);
-    const areasLines = document.getElementById('areas').value.split('\n');
-    for (const line of areasLines) {
-      if (line.trim()) {
-        y = checkPageHeight(doc, y);
-        doc.text(line.trim(), left + 5, y);
-        y += 4;
-      }
-    }
+    doc.setTextColor(0, 0, 0); // Negro
+    y = handleTextWithBullets(
+      doc,
+      document.getElementById('areas').value,
+      left,
+      y,
+      maxWidth
+    );
+    y += 5;
 
-    // Documentación
+    // Documentación entregable (verde original para título)
     y = checkPageHeight(doc, y);
     doc.setFontSize(12);
-    doc.setTextColor(46, 125, 50);
-    doc.text('Documentación Entregable Una vez Contratado El Servicio:', left, y);
+    doc.setTextColor(46, 125, 50); // #2E7D32
+    doc.text('Documentación Entregable:', left, y);
     y += 8;
     
     doc.setFontSize(9);
-    doc.setTextColor(0, 0, 0);
-    const docLines = document.getElementById('documentacion').value.split('\n');
-    for (const line of docLines) {
-      if (line.trim()) {
-        y = checkPageHeight(doc, y);
-        doc.text(' ' + line.trim(), left + 5, y);
-        y += 4;
-      }
-    }
+    doc.setTextColor(0, 0, 0); // Negro
+    y = handleTextWithBullets(
+      doc,
+      document.getElementById('documentacion').value,
+      left,
+      y,
+      maxWidth
+    );
+    y += 10;
 
-    // Inversión
-    y = checkPageHeight(doc, y, 30); // Más margen para esta sección
+    // Inversión (manteniendo colores originales)
+    y = checkPageHeight(doc, y, 30);
     doc.setFontSize(12);
-    doc.setTextColor(46, 125, 50);
-    doc.text(document.getElementById('periodo-inversion').value, 105, y, { align: 'center' });
+    doc.setTextColor(46, 125, 50); // #2E7D32
+    doc.text(document.getElementById('periodo-inversion').value, pageWidth / 2, y, { align: 'center' });
 
-    doc.setDrawColor(46, 125, 50);
+    doc.setDrawColor(46, 125, 50); // #2E7D32
     doc.setLineWidth(0.5);
-    doc.roundedRect(50, y + 5, 110, 15, 3, 3, 'S');
+    doc.roundedRect(left + 35, y + 5, maxWidth - 70, 15, 3, 3, 'S');
 
     doc.setFontSize(10);
     doc.setFont('helvetica', 'bold');
-    doc.setTextColor(27, 94, 32);
-    doc.text(document.getElementById('costo').value, 105, y + 12, { align: 'center' });
+    doc.setTextColor(27, 94, 32); // Verde oscuro original (#1B5E20)
+    doc.text(document.getElementById('costo').value, pageWidth / 2, y + 12, { align: 'center' });
 
     doc.setFontSize(9);
     doc.setFont('helvetica', 'normal');
-    doc.setTextColor(100, 100, 100);
-    doc.text(document.getElementById('detalles-costo').value, 105, y + 16, { align: 'center' });
-
+    doc.setTextColor(100, 100, 100); // Gris original
+    doc.text(document.getElementById('detalles-costo').value, pageWidth / 2, y + 16, { align: 'center' });
     y += 25;
 
-    // Observaciones
+    // Observaciones finales
     y = checkPageHeight(doc, y);
     doc.setFontSize(9);
-    doc.setFont('helvetica', 'normal');
-    const obsLines = doc.splitTextToSize(document.getElementById('observaciones').value, 180);
-    doc.text(obsLines, left + 5, y);
-    y += (obsLines.length * 4) + 10;
+    y = handleTextWithBullets(
+      doc,
+      document.getElementById('observaciones').value,
+      left,
+      y,
+      maxWidth
+    );
+    y += 10;
 
     // Firma
     y = checkPageHeight(doc, y);
     doc.setFontSize(10);
     doc.setFont('helvetica', 'bold');
-    doc.text(document.getElementById('nombre-firma').value, 105, y, { align: 'center' });
-
+    doc.text(document.getElementById('nombre-firma').value, pageWidth / 2, y, { align: 'center' });
     y += 5;
     doc.setFont('helvetica', 'normal');
-    doc.text(document.getElementById('cargo-firma').value, 105, y, { align: 'center' });
+    doc.text(document.getElementById('cargo-firma').value, pageWidth / 2, y, { align: 'center' });
 
-    // Pie de página en cada hoja
+    // Pie de página (gris original)
     const pageCount = doc.internal.getNumberOfPages();
     for (let i = 1; i <= pageCount; i++) {
       doc.setPage(i);
       doc.setFontSize(7);
-      doc.setTextColor(100, 100, 100);
-      doc.text('Av. Las torres 534. Col. Ojo de agua Puerto Vallarta Jal. C.P.48344  |  Biocontrol.vallarta@outlook.es  |  Teléfono (322)1579386, (322)2240731', 105, 285, { align: 'center' });
+      doc.setTextColor(100, 100, 100); // Gris original
+      doc.text('Av. Las torres 534. Col. Ojo de agua Puerto Vallarta Jal. C.P.48344  |  Biocontrol.vallarta@outlook.es  |  Teléfono (322)1579386, (322)2240731', 
+        pageWidth / 2, pageHeight - 10, { align: 'center' });
       
-      // Dibujar marco en cada página si está seleccionado
-      if (conMarco) {
-        dibujarMarco(doc);
-      }
+      if (conMarco) dibujarMarco(doc);
     }
 
-    // Guardar
-    const nombreArchivo = `Presupuesto_BIOPEST_${document.getElementById('empresa-destino').value.replace(/ /g,'_').substring(0,20)}.pdf`;
+    // Guardar PDF
+    const nombreEmpresa = document.getElementById('empresa-destino').value || 'cliente';
+    const nombreArchivo = `Presupuesto_${nombreEmpresa.replace(/ /g,'_').substring(0,20)}.pdf`;
     doc.save(nombreArchivo);
   });
 
