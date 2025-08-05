@@ -272,11 +272,54 @@
     margin-top: 4px;
     line-height: 1.4;
   }
+  
+  /* Opciones de marco */
+  .marco-options {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 15px;
+  }
+  
+  .marco-option {
+    flex: 1;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 10px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  
+  .marco-option:hover {
+    border-color: #2E7D32;
+  }
+  
+   .marco-option.selected {
+    border-color: #2196F3;
+    background-color: #f0f8ff;
+  }
+  
+  .marco-option input[type="radio"] {
+    margin-right: 5px;
+  }
 </style>
 </head>
 <body>
 <div class="container">
   <h1>Generador de Presupuesto</h1>
+
+  <!-- Opciones de marco -->
+  <div class="form-group">
+    <label>Estilo del PDF:</label>
+    <div class="marco-options">
+      <label class="marco-option selected">
+        <input type="radio" name="marco" value="con-marco" checked> Con marco decorativo
+      </label>
+      <label class="marco-option">
+        <input type="radio" name="marco" value="sin-marco"> Sin marco (simple)
+      </label>
+    </div>
+  </div>
 
   <!-- Logos predefinidos -->
   <div class="form-group">
@@ -325,11 +368,11 @@
   </div>
   <div class="form-group">
     <label for="destinatario">Nombre del Destinatario:</label>
-    <input id="destinatario" value="Ing. Gilberto Rodríguez">
+    <input id="destinatario" value="">
   </div>
   <div class="form-group">
     <label for="empresa-destino">Empresa/Institución:</label>
-    <input id="empresa-destino" value="Hotel Hyatt Ziva">
+    <input id="empresa-destino" value="">
   </div>
   <div class="form-group">
     <label for="fecha">Fecha:</label>
@@ -392,7 +435,7 @@ CONTROL DE PLAGAS VERACRUZ les ofrece un servicio profesional de fumigación con
   <div class="form-group">
     <div class="investment-box">
       <input id="periodo-inversion" class="investment-title" value="Inversión Mensual" style="text-align:center;border:none;background:transparent;">
-      <input id="costo" class="investment-amount" value="$32,000.00 MXN + IVA" style="text-align:center;border:none;background:transparent;">
+      <input id="costo" class="investment-amount" value="$.00 MXN + IVA" style="text-align:center;border:none;background:transparent;">
       <input id="detalles-costo" class="investment-details" value="Pago mensual por servicios integrales de control de plagas" style="text-align:center;border:none;background:transparent;">
     </div>
   </div>
@@ -494,11 +537,60 @@ apreciables órdenes para cualquier duda o aclaración al respecto.</textarea>
     }
   });
 
-  // Generar PDF
+  // Selección de opciones de marco
+  document.querySelectorAll('.marco-option').forEach(option => {
+    option.addEventListener('click', function() {
+      document.querySelectorAll('.marco-option').forEach(opt => opt.classList.remove('selected'));
+      this.classList.add('selected');
+      this.querySelector('input').checked = true;
+    });
+  });
+
+  // Función para dibujar marco decorativo
+  function dibujarMarco(doc) {
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    
+    // Marco principal - Azul marino (#001F3F)
+    doc.setDrawColor(0, 31, 63);
+    doc.setLineWidth(1.8);
+    doc.rect(7, 7, pageWidth - 14, pageHeight - 14);
+    
+    // Esquinas decorativas estilo náutico
+    const cornerLength = 15;
+    
+    // Función para dibujar esquinas decorativas
+    function drawCorner(x, y, mirrorX = false, mirrorY = false) {
+      const size = 12;
+      doc.setDrawColor(0, 31, 63);
+      doc.setLineWidth(1.2);
+    }
+  }
+
+  // Función para verificar si necesitamos nueva página
+  function checkPageHeight(doc, y, marginBottom = 20) {
+    const pageHeight = doc.internal.pageSize.getHeight();
+    if (y > pageHeight - marginBottom) {
+      doc.addPage();
+      dibujarMarco(doc);
+      return marginBottom; // Retorna nueva posición Y
+    }
+    return y;
+  }
+
+  // Generar PDF con paginación automática
   document.getElementById('generar-pdf').addEventListener('click', async () => {
     const doc = new jsPDF({ unit: 'mm', format: 'a4' });
     const left = 15, right = 195;
     let y = 15;
+    
+    // Verificar si se debe agregar marco
+    const conMarco = document.querySelector('input[name="marco"]:checked').value === 'con-marco';
+    
+    // Dibujar marco en la primera página si está seleccionado
+    if (conMarco) {
+      dibujarMarco(doc);
+    }
 
     // Asegurar que tenemos Base64: si no hay (y hay URL), intentamos convertir
     if (!selectedLogoDataURL && selectedLogoURL) {
@@ -541,25 +633,32 @@ apreciables órdenes para cualquier duda o aclaración al respecto.</textarea>
     doc.setFontSize(10);
     doc.setTextColor(0, 0, 0);
     doc.text(document.getElementById('lugar').value + ', ' + fechaFormateada, left, 40);
+    y = 40;
 
     doc.setFont('helvetica', 'bold');
-    doc.text(document.getElementById('destinatario').value, left, 45);
+    doc.text(document.getElementById('destinatario').value, left, y + 5);
     doc.setFont('helvetica', 'normal');
-    doc.text(document.getElementById('empresa-destino').value, left, 50);
+    doc.text(document.getElementById('empresa-destino').value, left, y + 10);
+    y += 15;
 
     // Saludo
     const saludoAdicional = document.getElementById('saludo-adicional').value;
-    const lines = doc.splitTextToSize(saludoAdicional, 180);
-    doc.text(lines, left, 60);
-
-    y = 60 + (lines.length * 4) + 5;
+    const saludoLines = doc.splitTextToSize(saludoAdicional, 180);
+    
+    // Verificar espacio para el saludo
+    y = checkPageHeight(doc, y);
+    
+    doc.text(saludoLines, left, y);
+    y += (saludoLines.length * 4) + 5;
 
     // Separador
+    y = checkPageHeight(doc, y);
     doc.setDrawColor(200, 200, 200);
     doc.line(left, y, right, y);
     y += 8;
 
-    // Plagas (versión corregida)
+    // Plagas
+    y = checkPageHeight(doc, y);
     doc.setFontSize(12);
     doc.setTextColor(46, 125, 50);
     doc.text('Plagas a Controlar:', left, y);
@@ -573,94 +672,105 @@ apreciables órdenes para cualquier duda o aclaración al respecto.</textarea>
     const c1 = plagas.slice(0, mitad), c2 = plagas.slice(mitad);
     const maxItems = Math.max(c1.length, c2.length);
     
-    let currentY = y; // Variable separada para controlar la posición Y
-    
     for (let i = 0; i < maxItems; i++) {
+      y = checkPageHeight(doc, y);
       if (c1[i]) {
-        doc.text('• ' + c1[i], left + 5, currentY);
+        doc.text('• ' + c1[i], left + 5, y);
       }
       if (c2[i]) {
-        doc.text('• ' + c2[i], 110, currentY);
+        doc.text('• ' + c2[i], 110, y);
       }
-      currentY += 4; // Incremento constante para ambas columnas
+      y += 4;
     }
     
-    y = currentY + 4; // Actualizamos la posición Y principal con espacio adicional
+    y += 4;
 
     // Servicios
+    y = checkPageHeight(doc, y);
     doc.setFontSize(12);
     doc.setTextColor(46, 125, 50);
-    doc.text('Servicios Incluidos:', left, y + 5);
+    doc.text('Servicios Incluidos:', left, y);
     y += 8;
     
     doc.setFontSize(9);
     doc.setTextColor(0, 0, 0);
-    document.getElementById('servicios').value.split('\n').forEach(s => {
-      if (s.trim()) {
-        doc.text(s.trim(), left + 5, y);
+    const serviciosLines = document.getElementById('servicios').value.split('\n');
+    for (const line of serviciosLines) {
+      if (line.trim()) {
+        y = checkPageHeight(doc, y);
+        doc.text(line.trim(), left + 5, y);
         y += 4;
       }
-    });
+    }
 
     // Áreas
+    y = checkPageHeight(doc, y);
     doc.setFontSize(12);
     doc.setTextColor(46, 125, 50);
-    doc.text('Áreas a Intervenir:', left, y + 5);
+    doc.text('Áreas a Intervenir:', left, y);
     y += 8;
     
     doc.setFontSize(9);
     doc.setTextColor(0, 0, 0);
-    document.getElementById('areas').value.split('\n').forEach(a => {
-      if (a.trim()) {
-        doc.text(a.trim(), left + 5, y);
+    const areasLines = document.getElementById('areas').value.split('\n');
+    for (const line of areasLines) {
+      if (line.trim()) {
+        y = checkPageHeight(doc, y);
+        doc.text(line.trim(), left + 5, y);
         y += 4;
       }
-    });
+    }
 
     // Documentación
+    y = checkPageHeight(doc, y);
     doc.setFontSize(12);
     doc.setTextColor(46, 125, 50);
-    doc.text('Documentación Entregable Una vez Contratado El Servicio:', left, y + 5);
+    doc.text('Documentación Entregable Una vez Contratado El Servicio:', left, y);
     y += 8;
     
     doc.setFontSize(9);
     doc.setTextColor(0, 0, 0);
-    document.getElementById('documentacion').value.split('\n').forEach(d => {
-      if (d.trim()) {
-        doc.text(' ' + d.trim(), left + 5, y);
+    const docLines = document.getElementById('documentacion').value.split('\n');
+    for (const line of docLines) {
+      if (line.trim()) {
+        y = checkPageHeight(doc, y);
+        doc.text(' ' + line.trim(), left + 5, y);
         y += 4;
       }
-    });
+    }
 
     // Inversión
+    y = checkPageHeight(doc, y, 30); // Más margen para esta sección
     doc.setFontSize(12);
     doc.setTextColor(46, 125, 50);
-    doc.text(document.getElementById('periodo-inversion').value, 105, y + 8, { align: 'center' });
+    doc.text(document.getElementById('periodo-inversion').value, 105, y, { align: 'center' });
 
     doc.setDrawColor(46, 125, 50);
     doc.setLineWidth(0.5);
-    doc.roundedRect(50, y + 12, 110, 15, 3, 3, 'S');
+    doc.roundedRect(50, y + 5, 110, 15, 3, 3, 'S');
 
     doc.setFontSize(10);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(27, 94, 32);
-    doc.text(document.getElementById('costo').value, 105, y + 22, { align: 'center' });
+    doc.text(document.getElementById('costo').value, 105, y + 12, { align: 'center' });
 
     doc.setFontSize(9);
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(100, 100, 100);
-    doc.text(document.getElementById('detalles-costo').value, 105, y + 26, { align: 'center' });
+    doc.text(document.getElementById('detalles-costo').value, 105, y + 16, { align: 'center' });
 
-    y += 35;
+    y += 25;
 
     // Observaciones
+    y = checkPageHeight(doc, y);
     doc.setFontSize(9);
     doc.setFont('helvetica', 'normal');
-    const obs = doc.splitTextToSize(document.getElementById('observaciones').value, 180);
-    doc.text(obs, left + 5, y);
+    const obsLines = doc.splitTextToSize(document.getElementById('observaciones').value, 180);
+    doc.text(obsLines, left + 5, y);
+    y += (obsLines.length * 4) + 10;
 
     // Firma
-    y += 20; // espacio antes de la firma
+    y = checkPageHeight(doc, y);
     doc.setFontSize(10);
     doc.setFont('helvetica', 'bold');
     doc.text(document.getElementById('nombre-firma').value, 105, y, { align: 'center' });
@@ -669,10 +779,19 @@ apreciables órdenes para cualquier duda o aclaración al respecto.</textarea>
     doc.setFont('helvetica', 'normal');
     doc.text(document.getElementById('cargo-firma').value, 105, y, { align: 'center' });
 
-    // Pie
-    doc.setFontSize(7);
-    doc.setTextColor(100, 100, 100);
-    doc.text('Av. Las torres 534. Col. Ojo de agua Puerto Vallarta Jal. C.P.48344  |  Biocontrol.vallarta@outlook.es  |  Teléfono (322)1579386, (322)2240731', 105, 285, { align: 'center' });
+    // Pie de página en cada hoja
+    const pageCount = doc.internal.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(7);
+      doc.setTextColor(100, 100, 100);
+      doc.text('Av. Las torres 534. Col. Ojo de agua Puerto Vallarta Jal. C.P.48344  |  Biocontrol.vallarta@outlook.es  |  Teléfono (322)1579386, (322)2240731', 105, 285, { align: 'center' });
+      
+      // Dibujar marco en cada página si está seleccionado
+      if (conMarco) {
+        dibujarMarco(doc);
+      }
+    }
 
     // Guardar
     const nombreArchivo = `Presupuesto_BIOPEST_${document.getElementById('empresa-destino').value.replace(/ /g,'_').substring(0,20)}.pdf`;
