@@ -627,7 +627,9 @@ apreciables órdenes para cualquier duda o aclaración al respecto.</textarea>
 
     // Fecha
     const fechaInput = document.getElementById('fecha').value;
-    const fecha = fechaInput ? new Date(fechaInput) : new Date();
+    const fecha = fechaInput ? 
+  new Date(new Date(fechaInput).getTime() + new Date(fechaInput).getTimezoneOffset() * 60000) : 
+  new Date(new Date().getTime() + new Date().getTimezoneOffset() * 60000);
     const fechaFormateada = fecha.toLocaleDateString('es-MX', { day: '2-digit', month: 'long', year: 'numeric' });
 
     doc.setFontSize(10);
