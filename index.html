@@ -507,12 +507,14 @@ apreciables órdenes para cualquier duda o aclaración al respecto.</textarea>
     selectedLogoURL = card.getAttribute('data-src');
     selectedLogoDataURL = null;
     previewImg.src = selectedLogoURL;
+    localStorage.setItem('selected-logo', selectedLogoURL);
   });
 
   document.getElementById('test-logo').addEventListener('click', async () => {
     try {
       const dataURL = await urlToDataURL(selectedLogoURL);
       selectedLogoDataURL = dataURL;
+      localStorage.setItem('custom-logo', dataURL);
       alert('Logo convertido a Base64 correctamente.');
     } catch (e) {
       alert('No se pudo convertir la URL a Base64.\nUsa Live Server/hosting o sube el logo desde tu PC.');
@@ -526,6 +528,7 @@ apreciables órdenes para cualquier duda o aclaración al respecto.</textarea>
     try {
       selectedLogoDataURL = await fileToDataURL(file);
       previewImg.src = selectedLogoDataURL;
+      localStorage.setItem('custom-logo', selectedLogoDataURL);
       alert('Logo local listo en Base64.');
     } catch (e) {
       alert('No se pudo leer el archivo seleccionado.');
@@ -538,6 +541,7 @@ apreciables órdenes para cualquier duda o aclaración al respecto.</textarea>
       document.querySelectorAll('.marco-option').forEach(opt => opt.classList.remove('selected'));
       this.classList.add('selected');
       this.querySelector('input').checked = true;
+      localStorage.setItem('marco-seleccionado', this.querySelector('input').value);
     });
   });
 
@@ -615,7 +619,7 @@ apreciables órdenes para cualquier duda o aclaración al respecto.</textarea>
     
     if (selectedLogoDataURL) {
       const type = getImageTypeFromExt(selectedLogoDataURL) || 'PNG';
-      doc.addImage(selectedLogoDataURL, type, left, y - 5, 35, 18);
+      doc.addImage(selectedLogoDataURL, type, left, y - 14, 35, 23);
     }
 
     // Encabezado (manteniendo colores originales)
@@ -806,6 +810,74 @@ apreciables órdenes para cualquier duda o aclaración al respecto.</textarea>
 
   // Fecha por defecto
   document.getElementById('fecha').valueAsDate = new Date();
+
+  // --- Persistencia de datos con localStorage ---
+  // Guardar datos cuando cambian
+  const inputsToSave = [
+    'nombre-empresa', 'eslogan-empresa', 'lugar', 'destinatario', 
+    'empresa-destino', 'saludo-adicional', 'servicios', 'areas',
+    'documentacion', 'periodo-inversion', 'costo', 'detalles-costo',
+    'observaciones', 'nombre-firma', 'cargo-firma'
+  ];
+
+  inputsToSave.forEach(id => {
+    const element = document.getElementById(id);
+    if (element) {
+      // Guardar cambios
+      element.addEventListener('input', () => {
+        localStorage.setItem(id, element.value);
+      });
+      
+      // Cargar datos guardados
+      const savedValue = localStorage.getItem(id);
+      if (savedValue !== null) {
+        element.value = savedValue;
+      }
+    }
+  });
+
+  // Guardar y cargar estado de checkboxes
+  document.querySelectorAll('.plaga').forEach(checkbox => {
+    // Guardar cambios
+    checkbox.addEventListener('change', () => {
+      const checkedPlagas = Array.from(document.querySelectorAll('.plaga:checked')).map(cb => cb.value);
+      localStorage.setItem('plagas-seleccionadas', JSON.stringify(checkedPlagas));
+    });
+    
+    // Cargar estado guardado
+    const savedPlagas = JSON.parse(localStorage.getItem('plagas-seleccionadas') || '[]');
+    checkbox.checked = savedPlagas.includes(checkbox.value);
+  });
+
+  // Cargar logo seleccionado
+  const savedLogo = localStorage.getItem('selected-logo');
+  if (savedLogo) {
+    document.querySelectorAll('.logo-card').forEach(card => {
+      if (card.getAttribute('data-src') === savedLogo) {
+        card.classList.add('selected');
+        selectedLogoURL = savedLogo;
+        previewImg.src = savedLogo;
+      } else {
+        card.classList.remove('selected');
+      }
+    });
+  }
+
+  // Cargar logo personalizado subido
+  const savedCustomLogo = localStorage.getItem('custom-logo');
+  if (savedCustomLogo) {
+    selectedLogoDataURL = savedCustomLogo;
+    previewImg.src = savedCustomLogo;
+  }
+
+  // Cargar opción de marco seleccionada
+  const savedMarco = localStorage.getItem('marco-seleccionado');
+  if (savedMarco) {
+    document.querySelector(`input[name="marco"][value="${savedMarco}"]`).checked = true;
+    document.querySelectorAll('.marco-option').forEach(opt => {
+      opt.classList.toggle('selected', opt.querySelector('input').value === savedMarco);
+    });
+  }
 </script>
 </body>
 </html>
