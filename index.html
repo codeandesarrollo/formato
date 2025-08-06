@@ -567,30 +567,34 @@ apreciables órdenes para cualquier duda o aclaración al respecto.</textarea>
   }
 
   // Función para manejar texto con viñetas manteniendo formato original
-  function handleTextWithBullets(doc, text, x, y, maxWidth) {
-    const lines = text.split('\n');
-    let currentY = y;
-    
-    for (const line of lines) {
-      if (!line.trim()) continue;
-      
-      const isBullet = line.trim().startsWith('•');
-      const bulletIndent = isBullet ? 5 : 0;
-      const splitLines = doc.splitTextToSize(line, maxWidth - bulletIndent);
-      
-      for (const splitLine of splitLines) {
-        currentY = checkPageHeight(doc, currentY);
-        doc.text(
-          splitLine, 
-          x + (isBullet && splitLine === splitLines[0] ? 5 : 0), 
-          currentY
-        );
-        currentY += 5;
-      }
+function handleTextWithBullets(doc, text, x, y, maxWidth) {
+  const paragraphs = text.split('\n'); // Separa por saltos de línea
+  let currentY = y;
+  
+  for (const para of paragraphs) {
+    if (!para.trim()) { // Si es un salto de línea vacío
+      currentY += 5; // Espacio adicional entre párrafos
+      continue;
     }
     
-    return currentY;
+    const isBullet = para.trim().startsWith('•');
+    const bulletIndent = isBullet ? 5 : 0;
+    const splitLines = doc.splitTextToSize(para, maxWidth - bulletIndent);
+    
+    for (const splitLine of splitLines) {
+      currentY = checkPageHeight(doc, currentY, 25);
+      doc.text(
+        splitLine, 
+        x + (isBullet ? 5 : 0), 
+        currentY
+      );
+      currentY += 5;
+    }
+    currentY += 3; // Espacio extra después de cada párrafo
   }
+  
+  return currentY;
+}
 
   // Generar PDF manteniendo colores originales
   document.getElementById('generar-pdf').addEventListener('click', async () => {
