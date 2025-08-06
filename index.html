@@ -26,15 +26,15 @@
   }
   
   h1 {
-    color: #2E7D32;
+    color: #001F3F;
     text-align: center;
     margin-bottom: 20px;
     font-size: 20px;
   }
   
   h2.section-title {
-    color: #2E7D32;
-    border-bottom: 2px solid #2E7D32;
+    color: #001F3F;
+    border-bottom: 2px solid #001F3F;
     padding-bottom: 4px;
     margin-top: 20px;
     font-size: 15px;
@@ -76,9 +76,9 @@
   input[type="date"]:focus,
   textarea:focus,
   select:focus {
-    border-color: #2E7D32;
+    border-color: #001F3F;
     outline: none;
-    box-shadow: 0 0 0 2px rgba(46, 125, 50, 0.1);
+    box-shadow: 0 0 0 2px rgba(0, 31, 63, 0.1);
   }
   
   textarea {
@@ -112,7 +112,7 @@
   
   /* Estilos para botones */
   button {
-    background: #2E7D32;
+    background: #001F3F;
     color: #fff;
     padding: 10px 20px;
     border: none;
@@ -125,7 +125,7 @@
   }
   
   button:hover {
-    background: #1B5E20;
+    background: #000D1F;
   }
   
   .btn-secondary {
@@ -142,15 +142,15 @@
   
   /* Sección de inversión */
   .investment-box {
-    border: 2px solid #2E7D32;
+    border: 2px solid #001F3F;
     padding: 12px;
     border-radius: 5px;
-    background: #f0f8f0;
+    background: #f0f2f8;
     margin: 12px 0;
   }
   
   .investment-title {
-    color: #2E7D32;
+    color: #001F3F;
     font-weight: bold;
     font-size: 15px;
     margin-bottom: 8px;
@@ -161,7 +161,7 @@
     font-size: 18px;
     font-weight: bold;
     text-align: center;
-    color: #1B5E20;
+    color: #000D1F;
     margin: 8px 0;
   }
   
@@ -192,13 +192,13 @@
   }
   
   .logo-card:hover {
-    border-color: #a5d6a7;
-    box-shadow: 0 0 0 3px rgba(76,175,80,.15);
+    border-color: #9eb5d6;
+    box-shadow: 0 0 0 3px rgba(0,31,63,.15);
   }
   
   .logo-card.selected {
-    border-color: #2E7D32;
-    box-shadow: 0 0 0 3px rgba(46,125,50,.25);
+    border-color: #001F3F;
+    box-shadow: 0 0 0 3px rgba(0,31,63,.25);
   }
   
   .logo-card img {
@@ -291,7 +291,7 @@
   }
   
   .marco-option:hover {
-    border-color: #2E7D32;
+    border-color: #001F3F;
   }
   
    .marco-option.selected {
@@ -626,14 +626,14 @@ function handleTextWithBullets(doc, text, x, y, maxWidth) {
     // Encabezado (manteniendo colores originales)
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(14);
-    doc.setTextColor(46, 125, 50); // Verde original (#2E7D32)
+    doc.setTextColor(0, 31, 63); // Azul marino (#001F3F)
     doc.text(document.getElementById('nombre-empresa').value, pageWidth / 2, y, { align: 'center' });
     doc.setFontSize(9);
     doc.setTextColor(100, 100, 100); // Gris original
     doc.text(document.getElementById('eslogan-empresa').value, pageWidth / 2, y + 5, { align: 'center' });
 
-    // Línea separadora (verde original)
-    doc.setDrawColor(46, 125, 50); // #2E7D32
+    // Línea separadora (azul marino original)
+    doc.setDrawColor(0, 31, 63); // #001F3F
     doc.setLineWidth(0.5);
     doc.line(left, y + 10, right, y + 10);
     y += 15;
@@ -674,10 +674,10 @@ function handleTextWithBullets(doc, text, x, y, maxWidth) {
     doc.line(left, y, right, y);
     y += 8;
 
-    // Plagas a controlar (verde original)
+    // Plagas a controlar (azul marino original)
     y = checkPageHeight(doc, y);
     doc.setFontSize(12);
-    doc.setTextColor(46, 125, 50); // #2E7D32
+    doc.setTextColor(0, 31, 63); // #001F3F
     doc.text('Plagas a Controlar:', left, y);
     y += 8;
 
@@ -695,10 +695,10 @@ function handleTextWithBullets(doc, text, x, y, maxWidth) {
     }
     y += 5;
 
-    // Servicios incluidos (verde original para título)
+    // Servicios incluidos (azul marino original para título)
     y = checkPageHeight(doc, y);
     doc.setFontSize(12);
-    doc.setTextColor(46, 125, 50); // #2E7D32
+    doc.setTextColor(0, 31, 63); // #001F3F
     doc.text('Servicios Incluidos:', left, y);
     y += 8;
     
@@ -713,10 +713,10 @@ function handleTextWithBullets(doc, text, x, y, maxWidth) {
     );
     y += 5;
 
-    // Áreas a intervenir (verde original para título)
+    // Áreas a intervenir (azul marino original para título)
     y = checkPageHeight(doc, y);
     doc.setFontSize(12);
-    doc.setTextColor(46, 125, 50); // #2E7D32
+    doc.setTextColor(0, 31, 63); // #001F3F
     doc.text('Áreas a Intervenir:', left, y);
     y += 8;
     
@@ -731,10 +731,10 @@ function handleTextWithBullets(doc, text, x, y, maxWidth) {
     );
     y += 5;
 
-    // Documentación entregable (verde original para título)
+    // Documentación entregable (azul marino original para título)
     y = checkPageHeight(doc, y);
     doc.setFontSize(12);
-    doc.setTextColor(46, 125, 50); // #2E7D32
+    doc.setTextColor(0, 31, 63); // #001F3F
     doc.text('Documentación Entregable:', left, y);
     y += 8;
     
@@ -752,16 +752,16 @@ function handleTextWithBullets(doc, text, x, y, maxWidth) {
     // Inversión (manteniendo colores originales)
     y = checkPageHeight(doc, y, 30);
     doc.setFontSize(12);
-    doc.setTextColor(46, 125, 50); // #2E7D32
+    doc.setTextColor(0, 31, 63); // #001F3F
     doc.text(document.getElementById('periodo-inversion').value, pageWidth / 2, y, { align: 'center' });
 
-    doc.setDrawColor(46, 125, 50); // #2E7D32
+    doc.setDrawColor(0, 31, 63); // #001F3F
     doc.setLineWidth(0.5);
     doc.roundedRect(left + 35, y + 5, maxWidth - 70, 15, 3, 3, 'S');
 
     doc.setFontSize(10);
     doc.setFont('helvetica', 'bold');
-    doc.setTextColor(27, 94, 32); // Verde oscuro original (#1B5E20)
+    doc.setTextColor(0, 13, 31); // Azul marino más oscuro (#000D1F)
     doc.text(document.getElementById('costo').value, pageWidth / 2, y + 12, { align: 'center' });
 
     doc.setFontSize(9);
