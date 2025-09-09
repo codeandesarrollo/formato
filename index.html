@@ -1,687 +1,410 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Generador de Presupuesto - BIOPEST</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Tomar asistencia</title>
 <style>
-  /* Estilos base */
-  body {
-    font-family: Arial, sans-serif;
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 20px;
-    background: #f5f5f5;
-    font-size: 13px;
-    line-height: 1.5;
-    color: #333;
-  }
-  .container {
-    background: #fff;
-    padding: 25px;
-    border-radius: 8px;
-    box-shadow: 0 0 10px rgba(0,0,0,.1);
-  }
-  h1 {
-    color: #001F3F;
-    text-align: center;
-    margin-bottom: 20px;
-    font-size: 20px;
-  }
-  h2.section-title {
-    color: #001F3F;
-    border-bottom: 2px solid #001F3F;
-    padding-bottom: 4px;
-    margin-top: 20px;
-    font-size: 15px;
-  }
-
-  /* Form */
-  .form-group {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 6px;
-    margin-bottom: 15px;
-  }
-  label { display:block; margin-bottom:4px; font-weight:700; color:#333; font-size:13px; }
-  input[type="text"], input[type="date"], input[type="email"], input[type="tel"], input[type="number"], select, textarea{
-    width:100%; padding:8px 10px; border:1px solid #ddd; border-radius:4px; box-sizing:border-box; font-size:13px; transition:border-color .2s;
-  }
-  input[type="text"]:focus, input[type="date"]:focus, textarea:focus, select:focus {
-    border-color:#001F3F; outline:none; box-shadow:0 0 0 2px rgba(0,31,63,.1);
-  }
-  textarea{ min-height:80px; resize:vertical; line-height:1.4; }
-
-  /* Checkboxes */
-  .plagas-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:8px; margin:12px 0; font-size:13px; }
-  .checkbox-label{ display:flex; align-items:center; gap:8px; font-size:13px; cursor:pointer; }
-  .checkbox-label input[type="checkbox"]{ width:auto; margin:0; flex-shrink:0; }
-
-  /* Botones */
-  button{ background:#001F3F; color:#fff; padding:10px 20px; border:none; border-radius:4px; cursor:pointer; font-size:14px; margin-top:15px; width:100%; transition:background-color .2s; }
-  button:hover{ background:#000D1F; }
-  .btn-secondary{ background:#EEE; color:#333; width:auto; padding:8px 14px; font-size:13px; }
-  .btn-secondary:hover{ background:#e0e0e0; }
-
-  /* Inversión */
-  .investment-box{ border:2px solid #001F3F; padding:12px; border-radius:5px; background:#f0f2f8; margin:12px 0; }
-  .investment-title{ color:#001F3F; font-weight:bold; font-size:15px; margin-bottom:8px; text-align:center; }
-  .investment-amount{ font-size:18px; font-weight:bold; text-align:center; color:#000D1F; margin:8px 0; }
-  .investment-details{ font-size:12px; text-align:center; color:#333; }
-
-  /* Logos */
-  .logo-picker{ display:grid; grid-template-columns:repeat(auto-fill, minmax(140px,1fr)); gap:12px; }
-  .logo-card{ border:2px solid #e0e0e0; border-radius:8px; padding:8px; cursor:pointer; background:#fff; display:flex; flex-direction:column; align-items:center; gap:6px; transition:border-color .2s, box-shadow .2s; }
-  .logo-card:hover{ border-color:#9eb5d6; box-shadow:0 0 0 3px rgba(0,31,63,.15); }
-  .logo-card.selected{ border-color:#001F3F; box-shadow:0 0 0 3px rgba(0,31,63,.25); }
-  .logo-card img{ max-width:100%; max-height:60px; object-fit:contain; background:#fff; }
-  .caption{ font-size:12px; color:#333; text-align:center; width:100%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .logo-actions{ display:flex; gap:10px; margin-top:8px; flex-wrap:wrap; }
-  .logo-preview{ margin-top:8px; display:flex; gap:10px; align-items:center; }
-  .logo-preview img{ max-height:50px; border:1px solid #eee; border-radius:4px; padding:4px; background:#fff; }
-  input[type="file"]{ display:none; }
-
-  /* Inputs especiales */
-  .investment-box input{ border:none; background:transparent; padding:0; margin:0; width:100%; text-align:center; }
-
-  /* Fecha */
-  input[type="date"]{
-    appearance:none;
-    background-image:url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpath d='M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z'%3e%3c/path%3e%3cpolyline points='17 21 17 13 7 13 7 21'%3e%3c/polyline%3e%3cpolyline points='7 3 7 8 15 8'%3e%3c/polyline%3e%3c/svg%3e");
-    background-repeat:no-repeat; background-position:right 8px center; background-size:16px; padding-right:30px;
-  }
-
-  small{ font-size:11px; color:#666; display:block; margin-top:4px; line-height:1.4; }
-
-  /* Marco */
-  .marco-options{ display:flex; gap:15px; margin-bottom:15px; }
-  .marco-option{ flex:1; border:1px solid #ddd; border-radius:4px; padding:10px; text-align:center; cursor:pointer; transition:all .2s; }
-  .marco-option:hover{ border-color:#001F3F; }
-  .marco-option.selected{ border-color:#2196F3; background-color:#f0f8ff; }
-  .marco-option input[type="radio"]{ margin-right:5px; }
+  :root{ --primary:#4A90E2; --success:#28a745; --warning:#ffc107; --danger:#dc3545; }
+  *{box-sizing:border-box;margin:0;padding:0;font-family:system-ui,Segoe UI,Roboto,sans-serif}
+  body{background:#f5f6fb;color:#2b2f36}
+  header{background:linear-gradient(135deg,var(--primary),#2E5FAA);color:#fff;padding:18px 0;text-align:center}
+  .container{max-width:900px;margin:0 auto;padding:22px}
+  .card{background:#fff;border-radius:14px;padding:22px;border:1px solid #e6ebf3;box-shadow:0 6px 18px rgba(0,0,0,.05);margin-top:12px}
+  .row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+  .form-control{padding:10px;border:1px solid #ddd;border-radius:8px;font-size:14px}
+  .legend{display:flex;gap:12px;align-items:center;font-size:14px;color:#445}
+  .dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+  .p{background:var(--success)} .t{background:var(--warning)} .a{background:var(--danger)}
+  .attendance-row{display:flex;justify-content:space-between;align-items:center;padding:12px;border-bottom:1px solid #eee}
+  .radio-group{display:flex;gap:8px}
+  .radio-group input{display:none}
+  .radio-group label{padding:6px 12px;border:1px solid #ccc;border-radius:6px;cursor:pointer;font-size:14px}
+  .radio-group input:checked+label{background:var(--primary);color:#fff;border-color:var(--primary)}
+  .btn{display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,var(--primary),#2E5FAA);color:#fff;text-decoration:none;padding:10px 16px;border-radius:10px;font-weight:600;border:none;cursor:pointer}
+  .btn-outline{background:transparent;color:var(--primary);border:1px solid var(--primary)}
+  .msg{margin-top:12px;padding:10px;border-radius:8px;font-size:14px}
+  .ok{background:#d4edda;color:#155724;border:1px solid #c3e6cb}
+  .err{background:#f8d7da;color:#721c24;border:1px solid #f5c6cb}
+  .login-form {max-width: 420px; margin: 40px auto; padding: 20px; background: white; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);}
+  .login-form input {width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 6px;}
+  .add-student {display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-top:16px;}
+  .add-student input {flex:1 1 260px;}
 </style>
 </head>
 <body>
+<header>
+  <h1>Tomar asistencia</h1>
+  <p id="ctx"></p>
+</header>
+
 <div class="container">
-  <h1>Generador de Presupuesto</h1>
-
-  <!-- Opciones de marco -->
-  <div class="form-group">
-    <label>Estilo del PDF:</label>
-    <div class="marco-options">
-      <label class="marco-option selected">
-        <input type="radio" name="marco" value="con-marco" checked> Con marco decorativo
-      </label>
-      <label class="marco-option">
-        <input type="radio" name="marco" value="sin-marco"> Sin marco (simple)
-      </label>
-    </div>
+  <!-- Acceso por código -->
+  <div id="codeAccess" class="card login-form" style="display:none;">
+    <h2>Acceso por código</h2>
+    <input id="accessCode" class="form-control" placeholder="Ingresa el código de acceso">
+    <button id="btnAccess" class="btn">Acceder</button>
+    <div id="codeMsg" class="msg" style="display:none; margin-top:12px"></div>
   </div>
 
-  <!-- Logos predefinidos -->
-  <div class="form-group">
-    <label>Elegir logo para el PDF (clic en una tarjeta):</label>
-    <div id="logo-picker" class="logo-picker">
-      <div class="logo-card selected" data-src="imagenes/logo1.png" data-caption="Logo 1 (PNG)">
-        <img src="imagenes/logo1.png" alt="Logo 1">
-        <div class="caption">Logo 1 (PNG)</div>
+  <!-- Interfaz principal -->
+  <div id="attendanceInterface" class="card" style="display:none;">
+    <div class="row">
+      <div>
+        <label for="fechaAsis">Fecha:</label>
+        <input id="fechaAsis" type="date" class="form-control"/>
+        <div class="legend" style="margin-top:6px">
+          <span class="dot p"></span> A = Asistencia &nbsp;&nbsp;
+          <span class="dot t"></span> R = Retardo &nbsp;&nbsp;
+          <span class="dot a"></span> F = Falta
+        </div>
       </div>
-      <div class="logo-card" data-src="imagenes/logo2.png" data-caption="Logo 2 (PNG)">
-        <img src="imagenes/logo2.png" alt="Logo 2">
-        <div class="caption">Logo 2 (PNG)</div>
+      <div style="margin-left:auto">
+        <a id="btnBack" class="btn-outline btn" href="opcionesgrupo.html">← Regresar</a>
       </div>
     </div>
 
-    <div class="logo-actions">
-      <button type="button" id="test-logo" class="btn-secondary" hidden>Probar carga (URL → Base64)</button>
-      <input id="file-logo" type="file" accept="image/*">
-      <button type="button" id="usar-subido" class="btn-secondary" hidden>Usar el logo subido</button>
+    <!-- Acciones rápidas -->
+    <div style="margin-top:0;display:flex;gap:8px;flex-wrap:wrap">
+      <button id="markAllA" class="btn">✓ Todos A (asistencia)</button>
+      <button id="markAllF" class="btn-outline btn">✗ Todos F (falta)</button>
+      <button id="saveAsis" class="btn" style="margin-left:auto">💾 Guardar asistencia</button>
     </div>
 
-    <div class="logo-preview">
-      <span>Vista previa:</span>
-      <img id="logo-preview-img" src="imagenes/logo1.png" alt="Vista previa del logo">
+    <!-- Agregar alumno manual -->
+    <div class="add-student">
+      <input id="newStudentName" class="form-control" placeholder="Nombre del alumno (p. ej. Juan Pérez)"/>
+      <button id="addStudentBtn" class="btn">➕ Agregar alumno</button>
     </div>
-  </div>
 
-  <!-- Campos -->
-  <div class="form-group">
-    <label for="nombre-empresa">Nombre de la Empresa:</label>
-    <input id="nombre-empresa" value="Control de Plagas Veracruz">
-  </div>
-  <div class="form-group">
-    <label for="eslogan-empresa">Eslogan o Descripción:</label>
-    <input id="eslogan-empresa" value="Servicios Profesionales de Fumigación y Control de Plagas">
-  </div>
-  <div class="form-group">
-    <label for="lugar">Ciudad y Estado:</label>
-    <input id="lugar" value="Puerto Vallarta, Jal.">
-  </div>
-  <div class="form-group">
-    <label for="destinatario">Nombre del Destinatario:</label>
-    <input id="destinatario" value="">
-  </div>
-  <div class="form-group">
-    <label for="empresa-destino">Empresa/Institución:</label>
-    <input id="empresa-destino" value="">
-  </div>
-  <div class="form-group">
-    <label for="fecha">Fecha:</label>
-    <input type="date" id="fecha">
-  </div>
-  <div class="form-group">
-    <label for="saludo-adicional">Saludo Adicional:</label>
-    <textarea id="saludo-adicional">A nombre de CONTROL DE PLAGAS VERACRUZ, les damos la más cordial bienvenida a nuestra empresa, ya que nuestro propósito es brindarles un servicio de calidad y mejorar la imagen de su empresa o negocio.
+    <!-- Lista -->
+    <div id="asisList" style="margin-top:8px"><p>Ingresa un código de acceso para comenzar.</p></div>
 
-CONTROL DE PLAGAS VERACRUZ les ofrece un servicio profesional de fumigación controlando de forma integral las plagas con productos de calidad, equipo y personal altamente calificado, anticipándonos a las necesidades del cliente, garantizando eficacia, seguridad y conservación del medio ambiente.</textarea>
+    <div id="msg" class="msg" style="display:none"></div>
   </div>
-
-  <h2 class="section-title">Detalles del Servicio</h2>
-
-  <div class="form-group">
-    <label>Plagas a Controlar:</label>
-    <div class="plagas-grid">
-      <label class="checkbox-label"><input type="checkbox" class="plaga" value="Cucaracha alemana" checked> Cucaracha alemana</label>
-      <label class="checkbox-label"><input type="checkbox" class="plaga" value="Cucaracha americana" checked> Cucaracha americana</label>
-      <label class="checkbox-label"><input type="checkbox" class="plaga" value="Mosquitos" checked> Mosquitos</label>
-      <label class="checkbox-label"><input type="checkbox" class="plaga" value="Arañas" checked> Arañas</label>
-      <label class="checkbox-label"><input type="checkbox" class="plaga" value="Chinches de cama" checked> Chinches de cama</label>
-      <label class="checkbox-label"><input type="checkbox" class="plaga" value="Alacranes" checked> Alacranes</label>
-      <label class="checkbox-label"><input type="checkbox" class="plaga" value="Roedores" checked> Roedores</label>
-      <label class="checkbox-label"><input type="checkbox" class="plaga" value="Hormigas" checked> Hormigas</label>
-      <label class="checkbox-label"><input type="checkbox" class="plaga" value="Murciélagos"> Murciélagos</label>
-      <label class="checkbox-label"><input type="checkbox" class="plaga" value="Aves"> Aves</label>
-    </div>
-  </div>
-
-  <div class="form-group">
-    <label for="servicios">Servicios Incluidos:</label>
-    <textarea id="servicios">• Fumigación general
-• Control de insectos voladores
-• Control de cucarachas en áreas críticas
-• Control de roedores (cerco sanitario)
-• Trampas para fauna nociva
-• Reporte mensual con evidencias</textarea>
-  </div>
-
-  <div class="form-group">
-    <label for="areas">Áreas a Intervenir:</label>
-    <textarea id="areas">• Cocinas y áreas de preparación de alimentos
-• Bodegas y almacenes
-• Áreas administrativas
-• Jardines y perímetros
-• Habitaciones (en caso de hoteles)
-• Sistemas de drenaje y alcantarillado</textarea>
-  </div>
-
-  <div class="form-group">
-    <label for="documentacion">Documentación Entregable Una vez Contratado El Servicio:</label>
-    <textarea id="documentacion">• Licencia sanitaria
-• Fichas técnicas de productos
-• Reporte mensual de servicios
-• Certificado de servicio
-• Calendario de rotación de plaguicidas</textarea>
-  </div>
-
-  <div class="form-group">
-    <div class="investment-box">
-      <input id="periodo-inversion" class="investment-title" value="Inversión Mensual" style="text-align:center;border:none;background:transparent;">
-      <input id="costo" class="investment-amount" value="$.00 MXN + IVA" style="text-align:center;border:none;background:transparent;">
-      <input id="detalles-costo" class="investment-details" value="Pago mensual por servicios integrales de control de plagas" style="text-align:center;border:none;background:transparent;">
-    </div>
-  </div>
-
-  <div class="form-group">
-    <label for="observaciones">Comentarios</label>
-    <textarea id="observaciones">Sin más por el momento y esperando que nos brinden la oportunidad servirles quedamos a sus  
-apreciables órdenes para cualquier duda o aclaración al respecto.</textarea>
-  </div>
-  
-  <h2 class="section-title">Firma</h2>
-  <div class="form-group">
-    <label for="nombre-firma">Nombre:</label>
-    <input type="text" id="nombre-firma" value="Uziel Pérez López">
-  </div>
-  <div class="form-group">
-    <label for="cargo-firma">Cargo:</label>
-    <input type="text" id="cargo-firma" value="Gerente General">
-  </div>
-
-  <button id="generar-pdf">Generar Presupuesto PDF</button>
 </div>
 
-<script>
-  const { jsPDF } = window.jspdf;
+<!-- Firebase -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import {
+    getFirestore, collection, collectionGroup, getDocs, getDoc, setDoc, doc, serverTimestamp, addDoc
+  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-  // --- Estado del logo seleccionado ---
-  let selectedLogoDataURL = null;
-  let selectedLogoURL = 'imagenes/logo1.png';
-
-  // --- Helpers base ---
-  function getImageTypeFromExt(src) {
-    const ext = (src || '').split('?')[0].split('.').pop()?.toLowerCase();
-    if (ext === 'jpg' || ext === 'jpeg') return 'JPEG';
-    if (ext === 'png') return 'PNG';
-    if (ext === 'webp') return 'WEBP';
-    return 'PNG';
-  }
-  async function urlToDataURL(url) {
-    const resp = await fetch(url);
-    const blob = await resp.blob();
-    return await new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = reject;
-      reader.readAsDataURL(blob);
-    });
-  }
-  function fileToDataURL(file) {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
-  }
-
-  // UI logos
-  const logoPicker = document.getElementById('logo-picker');
-  const previewImg = document.getElementById('logo-preview-img');
-
-  logoPicker.addEventListener('click', (e) => {
-    const card = e.target.closest('.logo-card');
-    if (!card) return;
-    logoPicker.querySelectorAll('.logo-card').forEach(c => c.classList.remove('selected'));
-    card.classList.add('selected');
-    selectedLogoURL = card.getAttribute('data-src');
-    selectedLogoDataURL = null;
-    previewImg.src = selectedLogoURL;
-    localStorage.setItem('selected-logo', selectedLogoURL);
+  // ===== Firebase =====
+  const app = initializeApp({
+    apiKey: "AIzaSyBEIeZz3HeU-8EVirVx9JAYnGbBegh1Uh4",
+    authDomain: "maestros-7faa6.firebaseapp.com",
+    projectId: "maestros-7faa6",
+    storageBucket: "maestros-7faa6.firebasestorage.app",
+    messagingSenderId: "328284079222",
+    appId: "1:328284079222:web:f0ab5c3443469d145d4b57",
+    measurementId: "G-YKBQD9EJH3"
   });
+  const db  = getFirestore(app);
 
-  document.getElementById('test-logo').addEventListener('click', async () => {
+  // ===== UI =====
+  const codeAccessDiv = document.getElementById('codeAccess');
+  const attendanceInterface = document.getElementById('attendanceInterface');
+  const accessCodeInput = document.getElementById('accessCode');
+  const btnAccess = document.getElementById('btnAccess');
+  const codeMsg = document.getElementById('codeMsg');
+  const fechaAsis = document.getElementById('fechaAsis');
+  const asisList = document.getElementById('asisList');
+  const msg = document.getElementById('msg');
+  const markAllA = document.getElementById('markAllA');
+  const markAllF = document.getElementById('markAllF');
+  const saveAsis = document.getElementById('saveAsis');
+  const btnBack = document.getElementById('btnBack');
+  const ctx = document.getElementById('ctx');
+  const newStudentName = document.getElementById('newStudentName');
+  const addStudentBtn  = document.getElementById('addStudentBtn');
+
+  // ===== Estado =====
+  let alumnos = [];
+  let asistencia = {};
+  let currentSid = null;
+  let currentGid = null;
+  let allowedGroups = [];
+  let currentCode = null; // << mantiene el ?code activo
+  let m = null; // maestro resuelto
+
+  // ===== Helpers =====
+  // Comparador para español (ignora acentos, puntuación y toma números)
+  const coll = new Intl.Collator('es', { sensitivity: 'base', ignorePunctuation: true, numeric: true });
+
+  const p = new URLSearchParams(location.search);
+  const sidParam = p.get('sid');
+  const gidParam = p.get('gid');
+  currentCode = p.get('code') || null; // << toma code si venía en la URL
+
+  function todayStr(){ return new Date().toISOString().slice(0,10); }
+  fechaAsis.value = todayStr();
+
+  function showMsg(el, text, kind='ok'){
+    el.style.display='block';
+    el.className = `msg ${kind==='ok'?'ok':'err'}`;
+    el.textContent = text;
+    setTimeout(()=>el.style.display='none', 3200);
+  }
+
+  // Normaliza para comparar nombres (sin acentos y minúsculas)
+  function normalizeName(s=''){
+    return s.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase().trim();
+  }
+
+  // === Resolver m (maestro) a partir de sid ===
+  async function resolveMaestroBySchoolId(sid){
+    const cg = await getDocs(collectionGroup(db, 'escuelas'));
+    const found = cg.docs.find(d => d.id === sid);
+    if (!found) return null;
+    return found.ref.parent.parent?.id || null; // maestros/{m}
+  }
+
+  // ==== Flujo de inicio ====
+  if (sidParam && gidParam){
+    // Modo admin o “admin con code propagado”
+    currentSid = sidParam;
+    currentGid = gidParam;
+    ctx.textContent = `Escuela: ${currentSid} · Grupo: ${currentGid}`;
+
+    // Back preservando ?code si venía
+    btnBack.href = currentCode
+      ? `opcionesgrupo.html?sid=${encodeURIComponent(currentSid)}&gid=${encodeURIComponent(currentGid)}&code=${encodeURIComponent(currentCode)}`
+      : `opcionesgrupo.html?sid=${encodeURIComponent(currentSid)}&gid=${encodeURIComponent(currentGid)}`;
+
+    m = await resolveMaestroBySchoolId(currentSid);
+    if(!m){ showMsg(msg, 'No se encontró la escuela bajo ningún maestro.', 'err'); }
+    else { codeAccessDiv.style.display='none'; attendanceInterface.style.display='block'; await initializeAttendance(); }
+  } else {
+    // Acceso por código (aún no validado)
+    codeAccessDiv.style.display='block';
+    attendanceInterface.style.display='none';
+    ctx.textContent = 'Acceso por código';
+    btnBack.href = './index.html';
+  }
+
+  // === Acceso por código ===
+  btnAccess.addEventListener('click', async () => {
+    const code = accessCodeInput.value.trim();
+    if(!code){ showMsg(codeMsg, 'Ingresa un código de acceso', 'err'); return; }
+
     try {
-      const dataURL = await urlToDataURL(selectedLogoURL);
-      selectedLogoDataURL = dataURL;
-      localStorage.setItem('custom-logo', dataURL);
-      alert('Logo convertido a Base64 correctamente.');
-    } catch (e) {
-      alert('No se pudo convertir la URL a Base64.\nUsa Live Server/hosting o sube el logo desde tu PC.');
-    }
-  });
+      const codeRef = doc(db, 'accesos', code);
+      const codeSnap = await getDoc(codeRef);
+      if(!codeSnap.exists()){ showMsg(codeMsg, 'Código inválido', 'err'); return; }
 
-  const fileInput = document.getElementById('file-logo');
-  document.getElementById('usar-subido').addEventListener('click', async () => {
-    const file = fileInput.files?.[0];
-    if (!file) return alert('Primero selecciona un archivo con "Subir logo desde tu PC".');
-    try {
-      selectedLogoDataURL = await fileToDataURL(file);
-      previewImg.src = selectedLogoDataURL;
-      localStorage.setItem('custom-logo', selectedLogoDataURL);
-      alert('Logo local listo en Base64.');
-    } catch (e) {
-      alert('No se pudo leer el archivo seleccionado.');
-    }
-  });
+      const codeData = codeSnap.data();
+      if(!codeData.activo){ showMsg(codeMsg, 'Este código ya no está activo', 'err'); return; }
 
-  // Opción de marco (UI)
-  document.querySelectorAll('.marco-option').forEach(option => {
-    option.addEventListener('click', function() {
-      document.querySelectorAll('.marco-option').forEach(opt => opt.classList.remove('selected'));
-      this.classList.add('selected');
-      this.querySelector('input').checked = true;
-      localStorage.setItem('marco-seleccionado', this.querySelector('input').value);
-    });
-  });
+      currentCode = code; // << guarda el code activo
+      currentSid = codeData.escuelaId;
+      allowedGroups = Array.isArray(codeData.grupos) ? codeData.grupos : [];
 
-  // Dibuja marco
-  function dibujarMarco(doc) {
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const pageHeight = doc.internal.pageSize.getHeight();
-    doc.setDrawColor(0, 31, 63); // Azul marino
-    doc.setLineWidth(1.8);
-    doc.rect(7, 7, pageWidth - 14, pageHeight - 14);
-  }
+      if(!currentSid || !allowedGroups.length){ showMsg(codeMsg, 'El código no tiene escuela/grupos asignados', 'err'); return; }
 
-  // Verifica altura de página (versión original usada en otras secciones)
-  function checkPageHeight(doc, y, marginBottom = 20) {
-    const pageHeight = doc.internal.pageSize.getHeight();
-    if (y > pageHeight - marginBottom) {
-      doc.addPage();
-      return 20;
-    }
-    return y;
-  }
+      // Resolver maestro y continuar
+      m = await resolveMaestroBySchoolId(currentSid);
+      if(!m){ showMsg(codeMsg, 'No se encontró la escuela bajo ningún maestro.', 'err'); return; }
 
-  /* ===========================
-     NUEVOS HELPERS PARA ALINEAR
-     =========================== */
+      // Mientras está el selector (si hay varios), Back va a lista de grupos permitidos
+      btnBack.href = `grupos.html?sid=${encodeURIComponent(currentSid)}&code=${encodeURIComponent(currentCode)}`;
 
-  // Garantiza espacio para una fila completa antes de pintar
-  function ensureSpace(doc, y, needed, marginBottom = 25) {
-    const pageHeight = doc.internal.pageSize.getHeight();
-    if (y + needed > pageHeight - marginBottom) {
-      doc.addPage();
-      return 20; // y inicial al comenzar página
-    }
-    return y;
-  }
-
-  // Dibuja una viñeta con sangría colgante en una columna
-  function drawBulletParagraph(doc, x, y, text, colWidth, lineH = 5) {
-    const clean = String(text || '').replace(/^\s*[•\-]\s*/, '').trim();
-    if (!clean) return 0;
-
-    const wrapWidth = Math.max(10, colWidth - 4); // espacio para la viñeta
-    const lines = doc.splitTextToSize(clean, wrapWidth);
-
-    // Viñeta en la primera línea
-    doc.text('•', x, y);
-    lines.forEach((ln, idx) => {
-      doc.text(ln, x + 4, y + idx * lineH);
-    });
-
-    return lines.length * lineH; // altura consumida
-  }
-
-  // Render en 2 columnas con filas alineadas a la celda más alta
-  function renderTwoColumnBullets(doc, items, xLeft, startY, colWidth, gap = 10, lineH = 5) {
-    const half = Math.ceil(items.length / 2);
-    const leftArr  = items.slice(0, half);
-    const rightArr = items.slice(half);
-    const xRight   = xLeft + colWidth + gap;
-
-    let y = startY;
-
-    for (let i = 0; i < half; i++) {
-      const leftItem  = leftArr[i]  ?? '';
-      const rightItem = rightArr[i] ?? '';
-
-      // Calcula altura de la fila antes de pintar
-      const leftLines  = leftItem  ? doc.splitTextToSize(String(leftItem).replace(/^\s*[•\-]\s*/, ''),  Math.max(10, colWidth - 4))  : [];
-      const rightLines = rightItem ? doc.splitTextToSize(String(rightItem).replace(/^\s*[•\-]\s*/, ''), Math.max(10, colWidth - 4)) : [];
-      const rowHeight  = Math.max(leftLines.length, rightLines.length) * lineH || lineH;
-
-      // Salto si no cabe la fila completa
-      y = ensureSpace(doc, y, rowHeight + 3);
-
-      // Dibuja ambas celdas
-      if (leftItem)  drawBulletParagraph(doc, xLeft,  y, leftItem,  colWidth, lineH);
-      if (rightItem) drawBulletParagraph(doc, xRight, y, rightItem, colWidth, lineH);
-
-      y += rowHeight + 3; // separación entre filas
-    }
-
-    return y;
-  }
-
-  // Convierte un textarea (con o sin •/-) a arreglo limpio
-  function parseList(text) {
-    return String(text || '')
-      .split('\n')
-      .map(s => s.replace(/^\s*[•\-]\s*/, '').trim())
-      .filter(Boolean);
-  }
-
-  // Función original para párrafos con viñetas (1 columna)
-  function handleTextWithBullets(doc, text, x, y, maxWidth) {
-    const paragraphs = text.split('\n');
-    let currentY = y;
-
-    for (const para of paragraphs) {
-      if (!para.trim()) { currentY += 5; continue; }
-      const isBullet = para.trim().startsWith('•');
-      const bulletIndent = isBullet ? 5 : 0;
-      const splitLines = doc.splitTextToSize(para, maxWidth - bulletIndent);
-
-      for (const splitLine of splitLines) {
-        currentY = checkPageHeight(doc, currentY, 25);
-        doc.text(splitLine, x + (isBullet ? 5 : 0), currentY);
-        currentY += 5;
+      if (allowedGroups.length === 1){
+        currentGid = allowedGroups[0];
+        await loadGroupInfo(currentSid, currentGid);
+      } else {
+        await showGroupSelector(currentSid, allowedGroups);
       }
-      currentY += 3;
+
+      codeAccessDiv.style.display = 'none';
+      attendanceInterface.style.display = 'block';
+    } catch (e){
+      console.error('Error verificando código:', e);
+      showMsg(codeMsg, 'Error al verificar el código', 'err');
     }
-    return currentY;
+  });
+
+  // Selector de grupo (si hay varios)
+  async function showGroupSelector(schoolId, groupIds){
+    // Obtener nombres desde ruta anidada
+    const groupsInfo = [];
+    for (const gid of groupIds){
+      const gref = doc(db, 'maestros', m, 'escuelas', schoolId, 'grupos', gid);
+      const gsnap = await getDoc(gref);
+      groupsInfo.push({ id: gid, name: gsnap.exists() ? (gsnap.data().name || gid) : gid });
+    }
+    asisList.innerHTML = `
+      <h3>Selecciona un grupo:</h3>
+      <div style="display:flex; flex-direction:column; gap:10px; margin-top:15px;">
+        ${groupsInfo.map(g=>`
+          <button class="btn" data-g="${g.id}">${g.name}</button>
+        `).join('')}
+      </div>
+    `;
+    asisList.querySelectorAll('button[data-g]').forEach(btn=>{
+      btn.addEventListener('click', async ()=>{
+        currentGid = btn.getAttribute('data-g');
+        await loadGroupInfo(currentSid, currentGid);
+      });
+    });
+    ctx.textContent = `Escuela: ${schoolId} · Selecciona grupo`;
   }
 
-  // === Generar PDF ===
-  document.getElementById('generar-pdf').addEventListener('click', async () => {
-    const doc = new jsPDF({ unit: 'mm', format: 'a4' });
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const pageHeight = doc.internal.pageSize.getHeight();
+  // Cargar nombre y preparar interfaz para un grupo
+  async function loadGroupInfo(schoolId, groupId){
+    try{
+      const gref = doc(db, 'maestros', m, 'escuelas', schoolId, 'grupos', groupId);
+      const gsnap = await getDoc(gref);
+      const gname = gsnap.exists() ? (gsnap.data().name || groupId) : groupId;
+      ctx.textContent = `Escuela: ${schoolId} · Grupo: ${gname}`;
 
-    // Márgenes
-    const left = 20;
-    const right = pageWidth - 20;
-    const maxWidth = right - left;
-    let y = 25;
-    const conMarco = document.querySelector('input[name="marco"]:checked').value === 'con-marco';
+      // Back a opciones del grupo, preservando ?code si existe
+      btnBack.href = currentCode
+        ? `opcionesgrupo.html?sid=${encodeURIComponent(schoolId)}&gid=${encodeURIComponent(groupId)}&code=${encodeURIComponent(currentCode)}`
+        : `opcionesgrupo.html?sid=${encodeURIComponent(schoolId)}&gid=${encodeURIComponent(groupId)}`;
 
-    // Marco inicial (solo en la primera página mientras generamos)
-    if (conMarco) dibujarMarco(doc);
-
-    // Logo
-    if (!selectedLogoDataURL && selectedLogoURL) {
-      try { selectedLogoDataURL = await urlToDataURL(selectedLogoURL); } catch (_) { console.warn('No se pudo convertir URL a Base64'); }
+      await initializeAttendance();
+    }catch(e){
+      console.error('Error cargando información del grupo:', e);
+      showMsg(msg, 'Error al cargar información del grupo', 'err');
     }
-    if (selectedLogoDataURL) {
-      const type = getImageTypeFromExt(selectedLogoDataURL) || 'PNG';
-      doc.addImage(selectedLogoDataURL, type, left, y - 14, 35, 23);
+  }
+
+  async function initializeAttendance(){
+    await loadAlumnos();
+    await loadAsistenciaForDate(fechaAsis.value || todayStr());
+  }
+
+  // === Cargar alumnos (ordenados A–Z en español) ===
+  async function loadAlumnos(){
+    alumnos = [];
+    try{
+      const snap = await getDocs(collection(db, 'maestros', m, 'escuelas', currentSid, 'grupos', currentGid, 'alumnos'));
+      snap.forEach(d=> alumnos.push({ id: d.id, name: d.data().name || '' }));
+      alumnos.sort((a, b) => coll.compare(a.name || '', b.name || '')); // ← orden A–Z
+      renderAsis();
+    }catch(e){
+      console.error('Error cargando alumnos:', e);
+      showMsg(msg, 'Error al cargar los alumnos', 'err');
     }
+  }
 
-    // Encabezado
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(14);
-    doc.setTextColor(0, 31, 63);
-    doc.text(document.getElementById('nombre-empresa').value, pageWidth / 2, y, { align: 'center' });
-    doc.setFontSize(9);
-    doc.setTextColor(100, 100, 100);
-    doc.text(document.getElementById('eslogan-empresa').value, pageWidth / 2, y + 5, { align: 'center' });
+  function renderAsis(){
+    if(!alumnos.length){ asisList.innerHTML = '<p>No hay alumnos en este grupo.</p>'; return; }
+    asisList.innerHTML = '';
+    alumnos.forEach(a=>{
+      const row = document.createElement('div');
+      row.className = 'attendance-row';
+      row.innerHTML = `
+        <div>${a.name}</div>
+        <div class="radio-group">
+          <input type="radio" name="r-${a.id}" id="rA-${a.id}" ${asistencia[a.id]==='A'?'checked':''}>
+          <label for="rA-${a.id}">A</label>
+          <input type="radio" name="r-${a.id}" id="rR-${a.id}" ${asistencia[a.id]==='R'?'checked':''}>
+          <label for="rR-${a.id}">R</label>
+          <input type="radio" name="r-${a.id}" id="rF-${a.id}" ${asistencia[a.id]==='F'?'checked':''}>
+          <label for="rF-${a.id}">F</label>
+        </div>
+      `;
+      asisList.appendChild(row);
+      row.querySelector(`#rA-${a.id}`).addEventListener('change',()=>asistencia[a.id]='A');
+      row.querySelector(`#rR-${a.id}`).addEventListener('change',()=>asistencia[a.id]='R');
+      row.querySelector(`#rF-${a.id}`).addEventListener('change',()=>asistencia[a.id]='F');
+    });
+  }
 
-    // Separador
-    doc.setDrawColor(0, 31, 63);
-    doc.setLineWidth(0.5);
-    doc.line(left, y + 10, right, y + 10);
-    y += 15;
+  async function loadAsistenciaForDate(dateId){
+    asistencia = {};
+    alumnos.forEach(a=> asistencia[a.id] = 'A');
+    try{
+      const ref = doc(db, 'maestros', m, 'escuelas', currentSid, 'grupos', currentGid, 'asistencias', dateId);
+      const snap = await getDoc(ref);
+      if(snap.exists()){
+        const regs = snap.data()?.registros || {};
+        Object.entries(regs).forEach(([aid, st])=>{
+          if(aid in asistencia){
+            const v = String(st||'A').toUpperCase();
+            asistencia[aid] = (v==='A'||v==='R'||v==='F') ? v : 'A';
+          }
+        });
+        renderAsis();
+        showMsg(msg, `Asistencia del ${dateId} cargada.`, 'ok');
+      }else{
+        renderAsis();
+        showMsg(msg, `Sin registro previo para ${dateId}.`, 'ok');
+      }
+    }catch(e){
+      console.error(e);
+      renderAsis();
+      showMsg(msg, 'No se pudo cargar la asistencia guardada.', 'err');
+    }
+  }
 
-    // Fecha y lugar
-    const fechaInput = document.getElementById('fecha').value;
-    const fecha = fechaInput ? 
-      new Date(new Date(fechaInput).getTime() + new Date(fechaInput).getTimezoneOffset() * 60000) : 
-      new Date(new Date().getTime() + new Date().getTimezoneOffset() * 60000);
-    const fechaFormateada = new Date(fecha).toLocaleDateString('es-MX', { day: '2-digit', month: 'long', year: 'numeric' });
+  // === Agregar alumno manual ===
+  addStudentBtn.addEventListener('click', async ()=>{
+    const raw = newStudentName.value.trim();
+    if(!raw){ showMsg(msg, 'Escribe el nombre del alumno.','err'); return; }
+    if(!currentSid || !currentGid || !m){ showMsg(msg, 'Primero selecciona un grupo.','err'); return; }
 
-    doc.setFontSize(10);
-    doc.setTextColor(0, 0, 0);
-    doc.text(`${document.getElementById('lugar').value}, ${fechaFormateada}`, left, y);
-    y += 10;
+    // Validar duplicados por nombre (ignorando acentos/mayúsculas)
+    const norm = normalizeName(raw);
+    const exists = alumnos.some(a => normalizeName(a.name) === norm);
+    if(exists){ showMsg(msg, 'Ese alumno ya existe en el grupo.','err'); return; }
 
-    // Destinatario
-    doc.setFont('helvetica', 'bold');
-    doc.text(document.getElementById('destinatario').value, left, y);
-    doc.setFont('helvetica', 'normal');
-    doc.text(document.getElementById('empresa-destino').value, left, y + 5);
-    y += 15;
+    try{
+      // Guardar en Firestore
+      const colRef = collection(db, 'maestros', m, 'escuelas', currentSid, 'grupos', currentGid, 'alumnos');
+      const created = await addDoc(colRef, {
+        name: raw,
+        createdAt: serverTimestamp()
+      });
 
-    // Saludo adicional
-    doc.setFontSize(10);
-    y = handleTextWithBullets(doc, document.getElementById('saludo-adicional').value, left, y, maxWidth);
-    y += 10;
+      // Actualizar estado local, reordenar y re-render
+      alumnos.push({ id: created.id, name: raw });
+      alumnos.sort((a, b) => coll.compare(a.name || '', b.name || ''));
+      renderAsis();
 
-    // Separador gris
-    y = checkPageHeight(doc, y);
-    doc.setDrawColor(200, 200, 200);
-    doc.line(left, y, right, y);
-    y += 8;
+      // Por defecto, marcar A para este nuevo alumno en el día actual seleccionado
+      asistencia[created.id] = 'A';
 
-    /* ===========================
-       PLAGAS A CONTROLAR (2 columnas alineadas)
-       =========================== */
-    y = checkPageHeight(doc, y);
-    doc.setFontSize(12);
-    doc.setTextColor(0, 31, 63);
-    doc.text('Plagas a Controlar:', left, y);
-    y += 8;
+      newStudentName.value = '';
+      showMsg(msg, 'Alumno agregado correctamente.','ok');
+    }catch(e){
+      console.error('Error agregando alumno:', e);
+      showMsg(msg, 'No se pudo agregar el alumno.','err');
+    }
+  });
 
-    doc.setFontSize(9);
-    doc.setTextColor(0, 0, 0);
+  // === Acciones rápidas ===
+  markAllA.addEventListener('click', ()=>{ alumnos.forEach(a=>asistencia[a.id]='A'); renderAsis(); });
+  markAllF.addEventListener('click', ()=>{ alumnos.forEach(a=>asistencia[a.id]='F'); renderAsis(); });
 
-    const plagas = Array.from(document.querySelectorAll('.plaga:checked')).map(cb => cb.value);
-    const colWidthPlagas = (maxWidth - 10) / 2; // 10mm de gap
-    y = renderTwoColumnBullets(doc, plagas, left + 5, y, colWidthPlagas, 10, 5);
-    y += 5;
+  fechaAsis.addEventListener('change', ()=> loadAsistenciaForDate(fechaAsis.value || todayStr()));
 
-    /* ===========================
-       SERVICIOS INCLUIDOS (1 columna)
-       =========================== */
-    y = checkPageHeight(doc, y);
-    doc.setFontSize(12);
-    doc.setTextColor(0, 31, 63);
-    doc.text('Servicios Incluidos:', left, y);
-    y += 8;
-
-    doc.setFontSize(9);
-    doc.setTextColor(0, 0, 0);
-    y = handleTextWithBullets(doc, document.getElementById('servicios').value, left, y, maxWidth);
-    y += 5;
-
-    /* ===========================
-       ÁREAS A INTERVENIR (2 columnas alineadas)
-       =========================== */
-    y = checkPageHeight(doc, y);
-    doc.setFontSize(12);
-    doc.setTextColor(0, 31, 63);
-    doc.text('Áreas a Intervenir:', left, y);
-    y += 8;
-
-    doc.setFontSize(9);
-    doc.setTextColor(0, 0, 0);
-
-    const areasArr = parseList(document.getElementById('areas').value);
-    const colWidthAreas = (maxWidth - 10) / 2;
-    y = renderTwoColumnBullets(doc, areasArr, left + 5, y, colWidthAreas, 10, 5);
-    y += 5;
-
-    /* ===========================
-       DOCUMENTACIÓN (1 columna)
-       =========================== */
-    y = checkPageHeight(doc, y);
-    doc.setFontSize(12);
-    doc.setTextColor(0, 31, 63);
-    doc.text('Documentación Entregable:', left, y);
-    y += 8;
-
-    doc.setFontSize(9);
-    doc.setTextColor(0, 0, 0);
-    y = handleTextWithBullets(doc, document.getElementById('documentacion').value, left, y, maxWidth);
-    y += 10;
-
-    // Inversión
-    y = checkPageHeight(doc, y, 30);
-    doc.setFontSize(12);
-    doc.setTextColor(0, 31, 63);
-    doc.text(document.getElementById('periodo-inversion').value, pageWidth / 2, y, { align: 'center' });
-
-    doc.setDrawColor(0, 31, 63);
-    doc.setLineWidth(0.5);
-    doc.roundedRect(left + 35, y + 5, maxWidth - 70, 15, 3, 3, 'S');
-
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(0, 13, 31);
-    doc.text(document.getElementById('costo').value, pageWidth / 2, y + 12, { align: 'center' });
-
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(100, 100, 100);
-    doc.text(document.getElementById('detalles-costo').value, pageWidth / 2, y + 16, { align: 'center' });
-    y += 25;
-
-    // Observaciones
-    y = checkPageHeight(doc, y);
-    doc.setFontSize(9);
-    y = handleTextWithBullets(doc, document.getElementById('observaciones').value, left, y, maxWidth);
-    y += 10;
-
-    // Firma
-    y = checkPageHeight(doc, y);
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'bold');
-    doc.text(document.getElementById('nombre-firma').value, pageWidth / 2, y, { align: 'center' });
-    y += 5;
-    doc.setFont('helvetica', 'normal');
-    doc.text(document.getElementById('cargo-firma').value, pageWidth / 2, y, { align: 'center' });
-
-    // Pie de página y marco final por página
-    const pageCount = doc.internal.getNumberOfPages();
-    for (let i = 1; i <= pageCount; i++) {
-      doc.setPage(i);
-      doc.setFontSize(7);
-      doc.setTextColor(100, 100, 100);
-      doc.text(
-        'Av. Las torres 534. Col. Ojo de agua Puerto Vallarta Jal. C.P.48344  |  Biocontrol.vallarta@outlook.es  |  Teléfono (322)1579386, (322)2240731',
-        pageWidth / 2, pageHeight - 10, { align: 'center' }
+  saveAsis.addEventListener('click', async ()=>{
+    if(!alumnos.length){ showMsg(msg, 'No hay alumnos para guardar.','err'); return; }
+    const dateId = fechaAsis.value || todayStr();
+    const registros = {};
+    alumnos.forEach(a=> registros[a.id] = asistencia[a.id] || 'A');
+    try{
+      await setDoc(
+        doc(db, 'maestros', m, 'escuelas', currentSid, 'grupos', currentGid, 'asistencias', dateId),
+        { date: dateId, registros, updatedAt: serverTimestamp() },
+        { merge: true }
       );
-      const conMarco = document.querySelector('input[name="marco"]:checked').value === 'con-marco';
-      if (conMarco) dibujarMarco(doc);
+      showMsg(msg, 'Asistencia del día guardada correctamente ✔');
+    }catch(e){
+      console.error(e);
+      showMsg(msg, 'Error al guardar asistencia','err');
     }
-
-    // Guardar
-    const nombreEmpresa = document.getElementById('empresa-destino').value || 'cliente';
-    const nombreArchivo = `Presupuesto_${nombreEmpresa.replace(/ /g,'_').substring(0,20)}.pdf`;
-    doc.save(nombreArchivo);
   });
 
-  // Fecha por defecto
-  document.getElementById('fecha').valueAsDate = new Date();
+  // UX: Enter en el input de código
+  accessCodeInput?.addEventListener('keyup', e=>{ if(e.key==='Enter') btnAccess.click(); });
 
-  // Persistencia localStorage
-  const inputsToSave = [
-    'nombre-empresa','eslogan-empresa','lugar','destinatario',
-    'empresa-destino','saludo-adicional','servicios','areas',
-    'documentacion','periodo-inversion','costo','detalles-costo',
-    'observaciones','nombre-firma','cargo-firma'
-  ];
-  inputsToSave.forEach(id => {
-    const el = document.getElementById(id);
-    if (!el) return;
-    el.addEventListener('input', () => localStorage.setItem(id, el.value));
-    const saved = localStorage.getItem(id);
-    if (saved !== null) el.value = saved;
-  });
-
-  // Guardar / cargar checkboxes
-  document.querySelectorAll('.plaga').forEach(checkbox => {
-    checkbox.addEventListener('change', () => {
-      const checked = Array.from(document.querySelectorAll('.plaga:checked')).map(cb => cb.value);
-      localStorage.setItem('plagas-seleccionadas', JSON.stringify(checked));
-    });
-    const saved = JSON.parse(localStorage.getItem('plagas-seleccionadas') || '[]');
-    checkbox.checked = saved.includes(checkbox.value);
-  });
-
-  // Cargar logo seleccionado
-  const savedLogo = localStorage.getItem('selected-logo');
-  if (savedLogo) {
-    document.querySelectorAll('.logo-card').forEach(card => {
-      const match = card.getAttribute('data-src') === savedLogo;
-      card.classList.toggle('selected', match);
-      if (match) { selectedLogoURL = savedLogo; previewImg.src = savedLogo; }
-    });
-  }
-  // Cargar logo personalizado
-  const savedCustomLogo = localStorage.getItem('custom-logo');
-  if (savedCustomLogo) { selectedLogoDataURL = savedCustomLogo; previewImg.src = savedCustomLogo; }
-
-  // Cargar opción de marco
-  const savedMarco = localStorage.getItem('marco-seleccionado');
-  if (savedMarco) {
-    document.querySelector(`input[name="marco"][value="${savedMarco}"]`).checked = true;
-    document.querySelectorAll('.marco-option').forEach(opt => {
-      opt.classList.toggle('selected', opt.querySelector('input').value === savedMarco);
-    });
-  }
+  // UX: Enter en el input de nuevo alumno
+  newStudentName?.addEventListener('keyup', e=>{ if(e.key==='Enter') addStudentBtn.click(); });
 </script>
 </body>
 </html>
